@@ -30,57 +30,63 @@ reg[`RegBus] logicout;
 reg[`RegBus] shiftout;
 reg[`RegBus] arithout;
 
+wire[`InstAddrBus] tmp;
+assign tmp = reg1_i + reg2_i;
+
 
 always @ (*) begin // Branch and Jump
-    if (rst == `RstEnable) begin
-        b_flag_o    <= `False;
-        b_target_o  <= `ZeroWord;
-    end else begin
+    b_target_o  = `ZeroWord;
+    b_flag_o    = `False;
+    if (rst != `RstEnable) begin
         case (aluop_i)
             `EX_JAL: begin
-                b_flag_o    <= `True;
-                b_target_o  <= pc_i + offset_i;
-//                $display("JAL : %d", b_target_o);
+                b_target_o  = pc_i + offset_i;
+                b_flag_o    = `True;
+//                $display("jal %h", b_target_o);
             end
             `EX_JALR: begin
-                b_flag_o    <= `True;
-                b_target_o  <= (reg1_i + reg2_i) & 32'hfffffffe;
+                b_target_o  = {tmp[31:1], 1'b0};
+                b_flag_o    = `True;
+//                $display("jalr %h", b_target_o);
             end
             `EX_BEQ: begin
-                b_flag_o    <= (reg1_i == reg2_i);
-                b_target_o  <= pc_i + offset_i;
+                b_target_o  = pc_i + offset_i;
+                b_flag_o    = (reg1_i == reg2_i);
             end
             `EX_BNE: begin
-                b_flag_o    <= (reg1_i != reg2_i);
-                b_target_o  <= pc_i + offset_i;
+                b_target_o  = pc_i + offset_i;
+                b_flag_o    = (reg1_i != reg2_i);
+//                $display("ex: BNE %h (%h, %h)", b_target_o, reg1_i, reg2_i);
             end
             `EX_BLT: begin
-                b_flag_o    <= ($signed(reg1_i) < $signed(reg2_i));
-                b_target_o  <= pc_i + offset_i;
+                b_target_o  = pc_i + offset_i;
+                b_flag_o    = ($signed(reg1_i) < $signed(reg2_i));
             end
             `EX_BGE: begin
-                b_flag_o    <= ($signed(reg1_i) > $signed(reg2_i));
-                b_target_o  <= pc_i + offset_i;
+                b_target_o  = pc_i + offset_i;
+                b_flag_o    = ($signed(reg1_i) > $signed(reg2_i));
             end
             `EX_BLTU: begin
-                b_flag_o    <= (reg1_i < reg2_i);
-                b_target_o  <= pc_i + offset_i;
+                b_target_o  = pc_i + offset_i;
+                b_flag_o    = (reg1_i < reg2_i);
+//                $display("ex: BLTU %h (%h, %h)", b_target_o, reg1_i, reg2_i);
             end
             `EX_BGEU: begin
-                b_flag_o    <= (reg1_i > reg2_i);
-                b_target_o  <= pc_i + offset_i;
+                b_target_o  = pc_i + offset_i;
+                b_flag_o    = (reg1_i > reg2_i);
             end
             default: begin
-                b_flag_o    <= `False;
-                b_target_o  <= `ZeroWord;
             end
         endcase
+        /*if (b_flag_o) begin
+            $display("ex: JUMP %h", b_target_o);
+        end*/
     end
 end
 
 always @ (*) begin // Logic
     if (rst == `RstEnable) begin
-        logicout <= `ZeroWord;
+        logicout = `ZeroWord;
     end else begin
         case (aluop_i)
             `EX_OR: begin
@@ -101,7 +107,7 @@ end
 
 always @ (*) begin // Shift
     if (rst == `RstEnable) begin
-        shiftout <= `ZeroWord;
+        shiftout = `ZeroWord;
     end else begin
         case (aluop_i)
             `EX_SLL: begin
@@ -155,10 +161,12 @@ always @ ( * ) begin // Load and Store
         case(aluop_i)
             `EX_SH, `EX_SB, `EX_SW: begin
                 mem_addr_o = reg1_i + offset_i;
+//                $display("EX ST : %h %h", reg1_i, offset_i);
                 is_ld = `False;
             end
             `EX_LW, `EX_LH, `EX_LB, `EX_LHU, `EX_LBU: begin
                 mem_addr_o = reg1_i + offset_i;
+//                $display("EX LD : %h %h", reg1_i, offset_i);
                 is_ld = `True;
             end
             default: begin
@@ -170,14 +178,16 @@ always @ ( * ) begin // Load and Store
 end
 
 always @ ( * ) begin // MUX
-    if(wreg_i == `False || !wd_i) begin
-        wd_o = `ZeroWord;
-        wreg_o = `False;
+//    $display("lalal %d %d %h %h", wreg_i, wd_i, aluop_i, alusel_i);
+    if ((rst == `RstEnable) || (wreg_i == `True && wd_i == `NOPRegAddr)) begin
+        wd_o    = `NOPRegAddr;
+        wreg_o  = `False;
         wdata_o = `ZeroWord;
         aluop_o = `MEM_NOP;
     end else begin
-        wd_o = wd_i;
-        wreg_o = wreg_i;
+            wd_o    = wd_i;
+            wreg_o  = wreg_i;
+//        if (pc_i)$display("ex shell %h reg1 = %h reg2 = %h", pc_i, reg1_i, reg2_i);
         case (alusel_i)
             `EX_RES_JAL: begin
                 wdata_o = pc_i + 4;
@@ -188,6 +198,7 @@ always @ ( * ) begin // MUX
                 aluop_o = `MEM_NOP;
             end
             `EX_RES_SHIFT: begin
+//                $display("ex shift %h %h %h\n", wd_i, wreg_i, shiftout);
                 wdata_o = shiftout;
                 aluop_o = `MEM_NOP;
             end
@@ -196,12 +207,16 @@ always @ ( * ) begin // MUX
                 aluop_o = `MEM_NOP;
             end
             `EX_RES_LD_ST: begin
+//                $display("LD_ST");
                 wdata_o = reg2_i;
                 aluop_o = aluop_i;
             end
-            default: begin
+            `EX_RES_NOP: begin
                 wdata_o = `ZeroWord;
                 aluop_o = `MEM_NOP;
+            end
+            default: begin
+                $display("ex unknown sel : ", alusel_i);
             end
         endcase
     end

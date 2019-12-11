@@ -144,8 +144,9 @@
 `define IndexBus        6:2
 `define CacheNAN        11'b11000000000
 
-`define INS             2'b01
-`define RAM             2'b10
+`define INSR            2'b01
+`define RAMR            2'b10
+`define RAMW            2'b11
 `define NONE            2'b00
 
 `define NoStall         6'b000000

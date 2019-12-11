@@ -40,6 +40,7 @@ always @ (posedge clk) begin
         offset_o    <= `ZeroWord;
         b_flag      <= `False;
     end else if (ex_b_flag_i == `True) begin
+//        $display("id_ex : b_flag is on");
         ex_aluop    <= `EX_NOP;
         ex_alusel   <= `EX_RES_NOP;
         ex_reg1     <= `ZeroWord;
@@ -48,9 +49,10 @@ always @ (posedge clk) begin
         ex_wreg     <= `False;
         ex_pc       <= `ZeroWord;
         offset_o    <= `ZeroWord;
-        b_flag      <= (stall_state[3] == `True);
-    end else if (stall_state[3] == `False) begin
+        b_flag      <= b_flag | (stall_state[2] == `True);
+    end else if (stall_state[2] == `False) begin
         if (b_flag == `True) begin
+//           $display("id_ex : b_flag is continuing");
             ex_aluop    <= `EX_NOP;
             ex_alusel   <= `EX_RES_NOP;
             ex_reg1     <= `ZeroWord;
@@ -69,8 +71,9 @@ always @ (posedge clk) begin
             ex_wreg     <= id_wreg;
             ex_pc       <= id_pc;
             offset_o    <= offset_i;
+//            $display("id_ex : %h %h %h %h", ex_wd, ex_wreg, ex_aluop, ex_alusel);
         end
-    end else if (stall_state[2] == `False) begin
+    end else if (stall_state[3] == `False) begin
         ex_aluop    <= `EX_NOP;
         ex_alusel   <= `EX_RES_NOP;
         ex_reg1     <= `ZeroWord;
@@ -79,6 +82,6 @@ always @ (posedge clk) begin
         ex_wreg     <= `False;
         ex_pc       <= `ZeroWord;
         offset_o    <= `ZeroWord;
-    end // else both stall, no modification needed
+    end
 end
 endmodule

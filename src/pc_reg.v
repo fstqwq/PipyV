@@ -14,35 +14,25 @@ module pc_reg (
     //output reg                  ce
 );
 
-reg[`InstAddrBus] next_pc;
-
-
+/*
+integer i = 0;
+always @(posedge clk) begin
+    i = i + 1;
+    $display("{ %d, [%h]", i, stall_state);
+end
+always @(negedge clk) begin
+    $display("} %d, [%h]", i, stall_state);
+end*/
 always @ (posedge clk) begin
-//    $display("clock    %d %d", pc, next_pc);
     if (rst == `RstEnable)  begin
-        pc      = `ZeroWord;
-        next_pc = `ZeroWord;
-//        $display("way1 %d", next_pc);
+        pc  <= `ZeroWord;
     end else if(ex_b_flag_i == `True) begin
-        if(stall_state[0] == `False) begin
-            pc          = ex_b_target_i;
-            next_pc     = ex_b_target_i + 4;
-//            $display("way2 %d", next_pc);
-        end else begin
-            next_pc     = ex_b_target_i;
-//            $display("way3 %d", next_pc);
-        end
+        pc  <= ex_b_target_i;
     end else if(stall_state[0] == `False) begin
-//        $display("way6 %d %d", pc, next_pc);
-        pc          = next_pc;
-        next_pc     = next_pc + 4;
-//        $display("way6 %d %d", pc, next_pc);
+        pc  <= pc + 4;
     end else begin
-//        $display("nothing to do, %d %d", pc, next_pc);
-//        pc          <= pc;
-//        next_pc     <= next_pc;
+//        $display("pc_reg : stalled");
     end
-//    $display("finally %d %d", pc, next_pc);
 end
 
 endmodule

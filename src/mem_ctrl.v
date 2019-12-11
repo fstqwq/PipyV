@@ -10,6 +10,8 @@ module mem_ctrl (
     input wire[1:0]             ram_state_i,
     
     output reg[`InstBus]        inst_o,
+    output reg[`InstAddrBus]    inst_pc,
+
     output reg[`RegBus]         ram_data_o,
 
     input wire[`InstAddrBus]    pc,
@@ -19,10 +21,11 @@ module mem_ctrl (
     output reg[`MemBus]         cpu_mem_a,
     output reg                  cpu_mem_wr,
 
-    input wire                  mem_ack_i,
+    input wire                  ram_sync_i,
     output wire                 ram_busy_o,
-    output reg                  ram_ok,
+    output reg                  ram_sync_o,
     output reg                  inst_ok
+//    output reg                  mctl_stall
 );
 
 /*
@@ -56,6 +59,7 @@ reg[`MemBus]    ram_addr;
 reg[`MemBus]    ram_data;
 reg             res_rdy;
 
+
 assign ram_busy_o = stage[3];
 /*
     Implement a cache for instructions.
@@ -81,6 +85,7 @@ always @ (negedge clk) begin
         cpu_mem_wr  <= `Read;
         res_rdy     <= `False;
         type        <= `NONE;
+//        mctl_stall  <= `False;
     end else if (rdy_in == `False) begin
         stage       <= 4'h0;
         ram_addr    <= `ZeroWord;
@@ -89,7 +94,9 @@ always @ (negedge clk) begin
         cpu_mem_wr  <= `Read;
         res_rdy     <= `False;
         type        <= `NONE;
+//        mctl_stall  <= `False;
     end else if (stage[3] == `True && stage[2] == `Read) begin // Reading
+//        mctl_stall  <= `True;
 //        $display("reading, stage : %d%d%d%d", stage[3], stage[2], stage[1], stage[0]);
         case (stage[1:0])
             2'h3: begin
@@ -97,18 +104,21 @@ always @ (negedge clk) begin
                 cpu_mem_a       <= ram_addr + 2;
                 cpu_mem_wr      <= `Read;
                 stage[1:0]      <= 2'h2;
+                res_rdy         <= `False;
             end
             2'h2: begin
                 ram_data[23:16] <= cpu_din;
                 cpu_mem_a       <= ram_addr + 1;
                 cpu_mem_wr      <= `Read;
                 stage[1:0]      <= 2'h1;
+                res_rdy         <= `False;
             end
             2'h1: begin
                 ram_data[15:8]  <= cpu_din;
                 cpu_mem_a       <= ram_addr + 0;
                 cpu_mem_wr      <= `Read;
                 stage[1:0]      <= 2'h0;
+                res_rdy         <= `False;
             end
             2'h0: begin
                 ram_data[7:0]   <= cpu_din;
@@ -117,109 +127,128 @@ always @ (negedge clk) begin
             end
         endcase
     end else if (stage[3] == `True && stage[2] == `Write) begin // Writing
+//        mctl_stall  <= `True;
         case (stage[1:0])
             2'h3: begin
                 cpu_dout    <= ram_data[23:16];
                 cpu_mem_a   <= ram_addr + 2;
                 cpu_mem_wr  <= `Write;
-                stage[3:0]  <= 2'h2;
+                stage[1:0]  <= 2'h2;
+                res_rdy     <= `False;
             end
             2'h2: begin
                 cpu_dout    <= ram_data[15:8];
                 cpu_mem_a   <= ram_addr + 1;
                 cpu_mem_wr  <= `Write;
                 stage[1:0]  <= 2'h1;
+                res_rdy     <= `False;
             end
             2'h1: begin
                 cpu_dout    <= ram_data[7:0];
                 cpu_mem_a   <= ram_addr + 0;
                 cpu_mem_wr  <= `Write;
                 stage[3:0]  <= 4'h0;
+                res_rdy     <= `True;
             end
         endcase
-    end else if (type == `RAM && mem_ack_i == `False) begin
-        // do nothing
-    end else if (stage[3] == `False && ram_r_req_i == `True) begin
+    end else if (ram_sync_i != ram_sync_o && stage[3] == `False && ram_r_req_i == `True) begin
+//        $display("memctl: LOAD %h", ram_addr_i);
         ram_addr    <= ram_addr_i;
         stage[3:0]  <= {2'b10,ram_state_i};
         cpu_mem_a   <= ram_addr_i + ram_state_i;
         cpu_mem_wr  <= `Read;
         res_rdy     <= `False;
-        type        <= `RAM;
-    end else if (stage[3] == `False && ram_w_req_i == `True) begin
+//        mctl_stall  <= `True;
+        type        <= `RAMR;
+    end else if (ram_sync_i != ram_sync_o && stage[3] == `False && ram_w_req_i == `True) begin
         ram_addr    <= ram_addr_i;
         ram_data    <= ram_data_i;
-        stage[3:0]  <= {2'b11,ram_state_i};
         cpu_mem_a   <= ram_addr_i + ram_state_i;
-        cpu_dout    <= ram_data_i[7:0];
         cpu_mem_wr  <= `Write;
         res_rdy     <= `False;
-        type        <= `RAM;
-    end else begin // IF
-        stage           <= 4'h0;
-        cpu_mem_a       <= `ZeroWord;
-        cpu_mem_wr      <= `Read;
-        if (cachehit == `True) begin
-//            $display("cache hit");
-            type        <= `INS;
-            stage       <= 4'h0;
-            res_rdy     <= `True;
-            if (tag0[pc[`IndexBus]] == pc[`TagBus]) begin
-                ram_data <= ins0[pc[`IndexBus]];
-            end else begin
-                ram_data <= ins1[pc[`IndexBus]];
+//        mctl_stall  <= `True;
+        type        <= `RAMW;
+        case (ram_state_i)
+            4'h3: begin
+                cpu_dout    <= ram_data_i[31:24];
+                stage[3:0]  <= 4'b1111;
             end
-        end else begin
-//            $display("cache miss %d", pc);
-            ram_addr    <= pc;
-            stage[3:0]  <= 4'b1011;
-            cpu_mem_a   <= pc + 3;
-            cpu_mem_wr  <= `Read;
-            res_rdy     <= `False;
-            type        <= `INS;
-        end
+            4'h1: begin
+                cpu_dout    <= ram_data_i[15:8];
+                stage[3:0]  <= 4'b1101;
+            end
+            4'h0: begin
+//                $display("write %d", ram_data_i[7:0]);
+                cpu_dout    <= ram_data_i[7:0];
+                res_rdy     <= `True;
+                stage[3:0]  <= 4'h0;
+            end
+        endcase
+    end else if (cachehit == `False) begin // IF
+//        $display("start fetch %d", pc);
+        ram_addr    <= pc;
+        stage[3:0]  <= 4'b1011;
+        cpu_mem_a   <= pc + 3;
+        cpu_mem_wr  <= `Read;
+        res_rdy     <= `False;
+//        mctl_stall  <= `False;
+        type        <= `INSR;
+    end else begin
+//        mctl_stall  <= `False;
+//        $display("nothing to do %d", pc);
     end
 end
 
 integer i, j;
 
-always @ (*) begin // Control status
-//    $display("lalal %d", j);
-//    j = j + 1;
-//    $display("ctrl");
-
+always @ (posedge rst or posedge res_rdy) begin
     if (rst == `RstEnable) begin
-        ram_ok      = `False;
-        inst_ok     = `False;
+        ram_sync_o  = 1'b0;
         ram_data_o  = `ZeroWord;
-        inst_o      = `ZeroWord;
-        j = 0;
-    end else if (rdy_in == `False) begin
-        ram_ok      = `False;
-        inst_ok     = `False;
-        ram_data_o  = `ZeroWord;
-        inst_o      = `ZeroWord;
-    end else if (res_rdy == `True) begin
-        if (type == `RAM) begin
-            ram_ok      = `True;
-            inst_ok     = `False;
-            ram_data_o  = ram_data;
-            inst_o      = `ZeroWord;
-        end else if (type == `INS) begin
-            ram_ok      = `False;
-            inst_ok     = `True;
-            ram_data_o  = `ZeroWord;
-            inst_o      = ram_data;
-        end
-    end else begin 
-        ram_ok      <= `False;
-        inst_ok     <= `False;
-        ram_data_o  <= `ZeroWord;
-        inst_o      <= `ZeroWord;
+    end else if (res_rdy == `True && (type == `RAMR || type == `RAMW)) begin
+        ram_sync_o  = !ram_sync_o;
+        ram_data_o  = ram_data;
     end
 end
 
-always @ (posedge clk or posedge inst_ok) begin // refresh cache 
+//assign          cachehit = (tag0[pc[`IndexBus]] == pc[`TagBus]) | (tag1[pc[`IndexBus]] == pc[`TagBus]);
+
+
+always @ (*) begin
+    if (rst == `RstEnable) begin
+        inst_ok     = `False;
+        inst_pc     = `ZeroWord;
+        inst_o      = `ZeroWord;
+        for (j = 0; j < `IndexSize; j = j + 1) begin
+            lrut[j] <= 1'b0;
+        end
+    end /*else if (stage[3] == `True) begin // disable cache
+        inst_ok     = `False;
+        inst_pc     = `ZeroWord;
+        inst_o      = `ZeroWord;
+        for (j = 0; j < `IndexSize; j = j + 1) begin
+            lrut[j] <= 1'b0;
+        end
+    end */ else if (tag0[pc[`IndexBus]] == pc[`TagBus]) begin
+        inst_o  = ins0[pc[`IndexBus]];
+        lrut[pc[`TagBus]]   = 1'b1;
+        inst_ok             = `True;
+        inst_pc             = pc;
+//        $display("mctl pc = %h", pc);
+    end else if (tag1[pc[`IndexBus]] == pc[`TagBus]) begin
+        inst_o  = ins1[pc[`IndexBus]];
+        lrut[pc[`TagBus]]   = 1'b0;
+        inst_ok             = `True;
+        inst_pc             = pc;
+//        $display("mctl pc = %h", pc);
+    end else begin
+        inst_ok     = `False;
+        inst_o      = `ZeroWord;
+        inst_pc     = `ZeroWord;
+    end
+end
+
+always @ ( * ) begin // refresh cache 
 //    $display("ref %d", j);
 //    j = j + 1;
     if (rst == `RstEnable) begin
@@ -228,22 +257,22 @@ always @ (posedge clk or posedge inst_ok) begin // refresh cache
             tag1[i] <= `CacheNAN;
             ins0[i] <= `ZeroWord;
             ins1[i] <= `ZeroWord;
-            lrut[i] <= 1'b0;
         end
-    end else if (inst_ok == `True) begin
-//        $display("Cache refresh %d %d : %d", pc[`IndexBus], pc[`TagBus], inst_o);
-        if (tag0[pc[`IndexBus]] == pc[`TagBus]) begin
-            lrut[pc[`TagBus]]   <= 1'b1;
-        end else if (tag1[pc[`IndexBus]] == pc[`TagBus]) begin
-            lrut[pc[`TagBus]]   <= 1'b0;
-        end else if (lrut[pc[`IndexBus]] == 1'b0) begin
-            tag0[pc[`IndexBus]] <= pc[`TagBus];
-            ins0[pc[`IndexBus]] <= inst_o;
-            lrut[pc[`TagBus]]   <= 1'b1;
-        end else if (lrut[pc[`IndexBus]] == 1'b1) begin
-            tag1[pc[`IndexBus]] <= pc[`TagBus];
-            ins1[pc[`IndexBus]] <= inst_o;
-            lrut[pc[`TagBus]]   <= 1'b0;
+    end /*else if (stage[3] == `True) begin // disable cache
+        for (i = 0; i < `IndexSize; i = i + 1) begin
+            tag0[i] <= `CacheNAN;
+            tag1[i] <= `CacheNAN;
+            ins0[i] <= `ZeroWord;
+            ins1[i] <= `ZeroWord;
+        end
+    end */else if (res_rdy == `True && type == `INSR) begin
+//       $display("Cache refresh [%h %h]", ram_addr, ram_data);
+        if (lrut[ram_addr[`IndexBus]] == 1'b0) begin
+            tag0[ram_addr[`IndexBus]] <= ram_addr[`TagBus];
+            ins0[ram_addr[`IndexBus]] <= ram_data;
+        end else if (lrut[ram_addr[`IndexBus]] == 1'b1) begin
+            tag1[ram_addr[`IndexBus]] <= ram_addr[`TagBus];
+            ins1[ram_addr[`IndexBus]] <= ram_data;
         end
     end
 end

@@ -7,6 +7,7 @@ module stall (
     input wire id_stall,
 //    input wire ex_stall,
     input wire mem_stall,
+//    input wire mctl_stall,
 
     output reg[`StallBus] stall_state
 );
@@ -24,6 +25,8 @@ always @ (*) begin
         stall_state = `IdStall; 
     end else if (if_stall == `True) begin
         stall_state = `IfStall; 
+//    end else if (mctl_stall == `True) begin
+//        stall_state = `MctlStall;
     end else begin
         stall_state = `NoStall; 
     end

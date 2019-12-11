@@ -36,7 +36,10 @@ wire[`InstBus] mem_ctrl_inst;
 
 wire[`InstAddrBus]  pc;
 wire[`InstAddrBus]  id_pc_i;
+wire[`InstAddrBus]  id_pc_o;
 wire[`InstBus]      id_inst_i;
+wire[`InstAddrBus]  ex_pc;
+wire[`InstAddrBus]  inst_pc;
 
 wire[`AluOpBus]     id_aluop_o;
 wire[`AluSelBus]    id_alusel_o;
@@ -78,10 +81,10 @@ wire[`RegAddrBus] reg1_addr;
 wire[`RegAddrBus] reg2_addr;
 
 wire[`RegBus]  ram_r_data;
-
+wire            inquiry;
 wire            ram_busy;
-wire            mem_ack;
-wire            ram_ok;
+wire            ram_sync_0;
+wire            ram_sync_1;
 wire            inst_ok;
 wire            ram_r_req;
 wire            ram_w_req;
@@ -92,10 +95,10 @@ wire[`RegBus]   ram_addr;
 
 wire                ex_b_flag;
 wire[`InstAddrBus]  ex_b_target;
+wire                ex_ld_flag;
 
 wire[`InstAddrBus]  id_offset;
 wire[`InstAddrBus]  ex_offset;
-wire[`InstAddrBus]  ex_pc;
 wire[`RegBus]       mem_addr;
 wire[`AluOpBus]     ex_aluop_o;
 wire[`AluOpBus]     mem_aluop_i;
@@ -106,6 +109,7 @@ wire            if_stall;
 wire            id_stall;
 //wire            ex_stall;
 wire            mem_stall;
+//wire            mctl_stall;
 
 //wire[`InstAddrBus] memctrl_pc;
 
@@ -125,14 +129,14 @@ pc_reg pc_reg0 (
 
 IF if0 (
   .clk(clk_in), .rst(rst_in), 
-  .pc(pc),      .inst(mem_ctrl_inst), .inst_ok(inst_ok),
+  .pc(pc),      .inst(mem_ctrl_inst), .inst_ok(inst_ok), .inst_pc(inst_pc),
   .pc_o(if_pc), .inst_o(if_inst),
   .if_stall(if_stall)
 );
 
 if_id if_id0 (
   .clk(clk_in),     .rst(rst_in),
-  .if_pc(pc),       .if_inst(if_inst),
+  .if_pc(if_pc),       .if_inst(if_inst),
   .id_pc(id_pc_i),  .id_inst(id_inst_i),
 
   .ex_b_flag_i(ex_b_flag),
@@ -147,6 +151,16 @@ id id0(
     .reg1_data_i(reg1_data), 
     .reg2_data_i(reg2_data),
 
+    .ex_ld_flag(ex_ld_flag),
+    .ex_wreg_i(ex_wreg_o),
+    .ex_wdata_i(ex_wdata_o),
+    .ex_wd_i(ex_wd_o),    
+
+    .mem_wreg_i(mem_wreg_o),
+    .mem_wdata_i(mem_wdata_o),
+    .mem_wd_i(mem_wd_o),
+
+    .pc_o(id_pc_o),
     .reg1_read_o(reg1_read),  .reg1_addr_o(reg1_addr),
     .reg2_read_o(reg2_read),  .reg2_addr_o(reg2_addr),
     
@@ -167,7 +181,7 @@ id_ex id_ex0(
     .id_aluop(id_aluop_o),   .id_alusel(id_alusel_o),
     .id_reg1(id_reg1_o),     .id_reg2(id_reg2_o),
     .id_wd(id_wd_o),         .id_wreg(id_wreg_o),
-    .id_pc(id_pc_i),
+    .id_pc(id_pc_o),
     .offset_i(id_offset),
 
     .ex_b_flag_i(ex_b_flag),
@@ -196,9 +210,10 @@ ex ex0(
     .b_flag_o(ex_b_flag),
     .b_target_o(ex_b_target),
     .aluop_o(ex_aluop_o),
-    .mem_addr_o(mem_addr)//,
+    .mem_addr_o(mem_addr),
     
-//    .ex_stall(ex_stall)
+    .is_ld(ex_ld_flag)
+//    ,.ex_stall(ex_stall)
 );
 
 ex_mem ex_mem0(
@@ -218,12 +233,14 @@ ex_mem ex_mem0(
 
     .mem_mem_addr(mem_mem_addr),
     .mem_aluop(mem_aluop_i),
+    .inquiry_o(inquiry),
 
     .stall_state(stall_state)
 );
 
 
 mem mem0(
+    .clk(clk_in),
     .rst(rst_in),
 
     .wd_i(mem_wd_i),
@@ -236,11 +253,13 @@ mem mem0(
     .wreg_o(mem_wreg_o),
     .wdata_o(mem_wdata_o),
 
+    .inquiry_i(inquiry),
+
     .ram_busy_i(ram_busy),
-    .ram_ok(ram_ok),
+    .ram_sync_i(ram_sync_0),
     .ram_r_data_i(ram_r_data),
 
-    .mem_ack_o(mem_ack),
+    .ram_sync_o(ram_sync_1),
     .ram_r_req_o(ram_r_req),
     .ram_w_req_o(ram_w_req),
     .ram_addr_o(ram_addr),
@@ -258,10 +277,11 @@ mem_ctrl mem_ctrl0(
     .ram_r_req_i(ram_r_req),
     .ram_w_req_i(ram_w_req),
     .ram_addr_i(ram_addr),
-    .ram_data_i(ram_r_data),
+    .ram_data_i(ram_w_data),
     .ram_state_i(ram_state),
 
     .inst_o(mem_ctrl_inst),
+    .inst_pc(inst_pc),
     .ram_data_o(ram_r_data),
 
     .pc(pc),
@@ -270,10 +290,12 @@ mem_ctrl mem_ctrl0(
     .cpu_mem_wr(mem_wr),
     .cpu_mem_a(mem_a),
 
-    .mem_ack_i(mem_ack),
+    .ram_sync_i(ram_sync_1),
     .ram_busy_o(ram_busy),
-    .ram_ok(ram_ok),
+    .ram_sync_o(ram_sync_0),
     .inst_ok(inst_ok)
+
+//    .mctl_stall(mctl_stall)
 
 );
 
@@ -285,6 +307,8 @@ mem_wb mem_Wb0(
     .mem_wreg(mem_wreg_o),
     .mem_wdata(mem_wdata_o),
 
+    .stall_state(stall_state),
+    
     .wb_wd(wb_wd_i),
     .wb_wreg(wb_wreg_i),
     .wb_wdata(wb_wdata_i)
@@ -298,6 +322,7 @@ stall stall0 (
   .id_stall(id_stall),
 //  .ex_stall(ex_stall),
   .mem_stall(mem_stall),
+//  .mctl_stall(mctl_stall),
   .stall_state(stall_state)
 );
 /*
