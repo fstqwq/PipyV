@@ -21,13 +21,13 @@ initial begin
   repeat(50) #1 clk=!clk;
   rst=0; 
   forever #1 clk=!clk;
-  //repeat(500) #1 clk=!clk;
+//  repeat(3000) #1 clk=!clk;
   $finish;
 end
 
 initial begin
-  $dumpfile("a.vcd");
-  $dumpvars(0,testbench);
+// $dumpfile("a.vcd");
+// $dumpvars(0,testbench);
 end
 
 endmodule
