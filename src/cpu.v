@@ -186,7 +186,7 @@ id_ex id_ex0(
     .id_pc(id_pc_o),
     .offset_i(id_offset),
 
-    .ex_b_flag_i(ex_b_flag),
+//    .ex_b_flag_i(ex_b_flag),
 
     .ex_aluop(ex_aluop_i),   .ex_alusel(ex_alusel_i),
     .ex_reg1(ex_reg1_i),     .ex_reg2(ex_reg2_i),
