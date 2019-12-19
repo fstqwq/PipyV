@@ -248,7 +248,7 @@ always @ (*) begin
     end
 end
 
-always @ ( * ) begin // refresh cache 
+always @ (posedge clk) begin // refresh cache 
 //    $display("ref %d", j);
 //    j = j + 1;
     if (rst == `RstEnable) begin

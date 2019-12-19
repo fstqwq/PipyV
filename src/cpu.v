@@ -121,7 +121,7 @@ regfile regfile1(
 );
 
 pc_reg pc_reg0 (
-  .clk(clk_in), .rst(rst_in), .pc(pc), 
+  .clk(clk_in), .rst(rst_in), .rdy(rdy_in), .pc(pc), 
 //  .id_b_flag_i(id_b_flag), .id_b_target_i(id_b_target),
   .ex_b_flag_i(ex_b_flag), .ex_b_target_i(ex_b_target),
   .stall_state(stall_state)
