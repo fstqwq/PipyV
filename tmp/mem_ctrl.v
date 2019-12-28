@@ -49,7 +49,7 @@ always @ (posedge clk) begin
         inst_pc     <= `ZeroWord;
         inst_ok     <= `False;
         ram_done_o  <= `False;
-        predicted_pc <= `ZeroWord;
+        predicted_pc <= 32'hffffffff;
     end else begin
         if (stage[4] == `True && stage[3] == `Read) begin // Reading
             ram_done_o  <= `False;

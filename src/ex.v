@@ -70,7 +70,7 @@ always @ (*) begin // Branch and Jump
             `EX_BLTU: begin
                 b_target_o  = pc_i + offset_i;
                 b_flag_o    = (reg1_i < reg2_i);
-//                $display("ex: BLTU %h (%h, %h)", b_target_o, reg1_i, reg2_i);
+//                $display("ex: BLTU %h (%h, %h) jmp=%d", b_target_o, reg1_i, reg2_i, (reg1_i < reg2_i));
             end
             `EX_BGEU: begin
                 b_target_o  = pc_i + offset_i;

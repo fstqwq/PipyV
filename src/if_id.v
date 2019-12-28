@@ -14,8 +14,17 @@ module if_id(
     output reg[`InstAddrBus]    id_pc,
     output reg[`InstBus]        id_inst
 );
-
-
+/*
+integer i;
+always @ (posedge clk) begin
+    if (rst) begin
+        i <= 0;
+    end else begin
+        $display(i);
+        i <= i + 1;
+    end
+end
+*/
 always @ (posedge clk) begin
     if (rst == `RstEnable) begin
         id_inst <= `ZeroWord;

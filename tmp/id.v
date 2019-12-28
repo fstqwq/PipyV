@@ -35,7 +35,8 @@ module id (
 //    output reg[`InstAddrBus]    b_target_o,
     output reg[`RegBus]         offset_o,
 
-    output wire                 id_stall
+    output wire                 id_stall,
+    output wire                 jmp_stall
 
 );
 
@@ -469,7 +470,8 @@ always @ (*) begin
 end
 
 assign id_stall = reg1_stall | reg2_stall;
-assign jmp_stall = opcode == `JAL | opcode == `JALR | opcode == `BRANCH;
+assign jmp_stall = `False;
+//opcode == `JAL | opcode == `JALR | opcode == `BRANCH;
 
 always @ (*) begin // when need 3 operands
     if (rst == `RstEnable) begin

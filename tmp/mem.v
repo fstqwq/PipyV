@@ -54,7 +54,6 @@ always @ (*) begin
     end else begin
         wd_o            = wd_i;
         wreg_o          = wreg_i;
-        wdata_o         = wdata_i;
         case(aluop_i)
             `MEM_NOP: begin
                 ram_r_req_o     = `False;
@@ -63,6 +62,7 @@ always @ (*) begin
                 ram_addr_o      = `ZeroWord;
                 ram_state       = 2'h0;
                 mem_stall       = `False;
+                wdata_o         = wdata_i;
             end
             `EX_LB: begin
                 ram_r_req_o     = `True;
@@ -78,7 +78,7 @@ always @ (*) begin
                 ram_w_req_o     = `False;
                 ram_w_data_o    = `ZeroWord;
                 ram_addr_o      = addr_i;
-                wdata_o        = {24'b0,ram_r_data_i[7:0]};
+                wdata_o         = {24'b0,ram_r_data_i[7:0]};
                 ram_state       = 2'b00;
                 mem_stall       = !ram_done_i;
             end
@@ -114,6 +114,7 @@ always @ (*) begin
                 ram_w_req_o     = `True;
                 ram_addr_o      = addr_i;
                 ram_w_data_o    = wdata_i;
+                wdata_o         = wdata_i;
                 ram_state       = 2'b00;
                 mem_stall       = !ram_done_i;
             end
@@ -122,6 +123,7 @@ always @ (*) begin
                 ram_w_req_o     = `True;
                 ram_addr_o      = addr_i;
                 ram_w_data_o    = wdata_i;
+                wdata_o         = wdata_i;
                 ram_state       = 2'b01;
                 mem_stall       = !ram_done_i;
             end
@@ -130,6 +132,7 @@ always @ (*) begin
                 ram_w_req_o     = `True;
                 ram_addr_o      = addr_i;
                 ram_w_data_o    = wdata_i;
+                wdata_o         = wdata_i;
                 ram_state       = 2'b11;
                 mem_stall       = !ram_done_i;
             end
@@ -138,6 +141,7 @@ always @ (*) begin
                 ram_w_req_o     = `False;
                 ram_w_data_o    = `ZeroWord;
                 ram_addr_o      = `ZeroWord;
+                wdata_o         = `ZeroWord;
                 ram_state       = 2'b0;
                 mem_stall       = `False;
             end

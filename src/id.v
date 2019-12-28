@@ -35,7 +35,8 @@ module id (
 //    output reg[`InstAddrBus]    b_target_o,
     output reg[`RegBus]         offset_o,
 
-    output wire                 id_stall
+    output wire                 id_stall,
+    output wire                 jmp_stall
 
 );
 

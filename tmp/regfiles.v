@@ -28,7 +28,7 @@ always @ (posedge clk) begin
             regs[i] = `ZeroWord;
     end else begin
         if ((w_req == `True) && (w_addr != `RegNumLog2'h0)) begin	
-    //    	$display("rw %h %h", w_addr, w_data);
+//        	$display("rw %h %h", w_addr, w_data);
     /*        for (i = 0; i < `RegNum; i = i + 1) begin
                 $write("(%2h,%h)",i,regs[i]);
             end

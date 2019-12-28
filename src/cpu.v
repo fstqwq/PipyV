@@ -112,6 +112,7 @@ wire            if_stall;
 wire            id_stall;
 //wire            ex_stall;
 wire            mem_stall;
+wire            jmp_stall;
 
 //wire[`InstAddrBus] memctrl_pc;
 
@@ -175,7 +176,8 @@ id id0(
     .offset_o(id_offset),
 //    .b_flag_o(id_b_flag),     .b_target_o(id_b_target),
 
-    .id_stall(id_stall)
+    .id_stall(id_stall),
+    .jmp_stall(jmp_stall)
 );
 
 id_ex id_ex0(
@@ -319,6 +321,7 @@ stall stall0 (
   .id_stall(id_stall),
 //  .ex_stall(ex_stall),
   .mem_stall(mem_stall),
+  .jmp_stall(jmp_stall),
 //  .mctl_stall(mctl_stall),
   .stall_state(stall_state)
 );
