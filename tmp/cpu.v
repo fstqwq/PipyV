@@ -28,8 +28,8 @@ module cpu(
 // - 0x30004 read: read clocks passed since cpu starts (in dword, 4 bytes)
 // - 0x30004 write: indicates program stop (will output '\0' through uart tx)
 
-wire dbgrst;
-assign dbgrst = rst_in | (~rdy_in);
+wire rst;
+assign rst = rst_in | (~rdy_in);
 
 
 wire[`InstBus] mem_ctrl_inst;
@@ -40,6 +40,9 @@ wire[`InstAddrBus]  id_pc_o;
 wire[`InstBus]      id_inst_i;
 wire[`InstAddrBus]  ex_pc;
 wire[`InstAddrBus]  inst_pc;
+
+wire                inst_fe;
+wire [`InstAddrBus] inst_fpc;
 
 wire[`AluOpBus]     id_aluop_o;
 wire[`AluSelBus]    id_alusel_o;
@@ -82,7 +85,7 @@ wire[`RegAddrBus] reg2_addr;
 
 wire[`RegBus]  ram_r_data;
 wire            inquiry;
-wire            ram_busy;
+wire            ram_done;
 wire            ram_sync_0;
 wire            ram_sync_1;
 wire            inst_ok;
@@ -109,33 +112,33 @@ wire            if_stall;
 wire            id_stall;
 //wire            ex_stall;
 wire            mem_stall;
-wire            jmp_stall;
 
 //wire[`InstAddrBus] memctrl_pc;
 
 regfile regfile1(
-    .clk(clk_in), .rst(rst_in),
+    .clk(clk_in), .rst(rst),
     .w_req(wb_wreg_i),   .w_addr(wb_wd_i),    .w_data(wb_wdata_i),
     .r1_req(reg1_read),  .r1_addr(reg1_addr), .r1_data(reg1_data),
     .r2_req(reg2_read),  .r2_addr(reg2_addr), .r2_data(reg2_data)
 );
 
 pc_reg pc_reg0 (
-  .clk(clk_in), .rst(rst_in), .pc(pc), 
+  .clk(clk_in), .rst(rst), .pc(pc), 
 //  .id_b_flag_i(id_b_flag), .id_b_target_i(id_b_target),
   .ex_b_flag_i(ex_b_flag), .ex_b_target_i(ex_b_target),
   .stall_state(stall_state)
 );
 
 IF if0 (
-  .clk(clk_in), .rst(rst_in), 
+  .clk(clk_in), .rst(rst), 
   .pc(pc),      .inst(mem_ctrl_inst), .inst_ok(inst_ok), .inst_pc(inst_pc),
   .pc_o(if_pc), .inst_o(if_inst),
+  .inst_fe(inst_fe), .inst_fpc(inst_fpc),
   .if_stall(if_stall)
 );
 
 if_id if_id0 (
-  .clk(clk_in),     .rst(rst_in),
+  .clk(clk_in),     .rst(rst),
   .if_pc(if_pc),       .if_inst(if_inst),
   .id_pc(id_pc_i),  .id_inst(id_inst_i),
 
@@ -145,7 +148,7 @@ if_id if_id0 (
 );
 
 id id0(
-    .rst(rst_in),
+    .rst(rst),
     .pc_i(id_pc_i),
     .inst_i(id_inst_i),
     .reg1_data_i(reg1_data), 
@@ -172,13 +175,12 @@ id id0(
     .offset_o(id_offset),
 //    .b_flag_o(id_b_flag),     .b_target_o(id_b_target),
 
-    .id_stall(id_stall),
-    .jmp_stall(jmp_stall)
+    .id_stall(id_stall)
 );
 
 id_ex id_ex0(
     .clk(clk_in),
-    .rst(rst_in),
+    .rst(rst),
 
     .id_aluop(id_aluop_o),   .id_alusel(id_alusel_o),
     .id_reg1(id_reg1_o),     .id_reg2(id_reg2_o),
@@ -197,7 +199,7 @@ id_ex id_ex0(
 );
 
 ex ex0(
-    .rst(rst_in),
+    .rst(rst),
 
     .pc_i(ex_pc),
     .aluop_i(ex_aluop_i), .alusel_i(ex_alusel_i),
@@ -220,7 +222,7 @@ ex ex0(
 
 ex_mem ex_mem0(
     .clk(clk_in),
-    .rst(rst_in),
+    .rst(rst),
     
     .ex_wd(ex_wd_o),
     .ex_wreg(ex_wreg_o),
@@ -235,15 +237,13 @@ ex_mem ex_mem0(
 
     .mem_mem_addr(mem_mem_addr),
     .mem_aluop(mem_aluop_i),
-    .inquiry_o(inquiry),
 
     .stall_state(stall_state)
 );
 
 
 mem mem0(
-    .clk(clk_in),
-    .rst(rst_in),
+    .rst(rst),
 
     .wd_i(mem_wd_i),
     .wreg_i(mem_wreg_i),
@@ -255,13 +255,10 @@ mem mem0(
     .wreg_o(mem_wreg_o),
     .wdata_o(mem_wdata_o),
 
-    .inquiry_i(inquiry),
 
-    .ram_busy_i(ram_busy),
-    .ram_sync_i(ram_sync_0),
+    .ram_done_i(ram_done),
     .ram_r_data_i(ram_r_data),
 
-    .ram_sync_o(ram_sync_1),
     .ram_r_req_o(ram_r_req),
     .ram_w_req_o(ram_w_req),
     .ram_addr_o(ram_addr),
@@ -273,8 +270,7 @@ mem mem0(
 
 mem_ctrl mem_ctrl0(
     .clk(clk_in),
-    .rst(rst_in),
-    .rdy_in(rdy_in),
+    .rst(rst),
 
     .ram_r_req_i(ram_r_req),
     .ram_w_req_i(ram_w_req),
@@ -282,19 +278,19 @@ mem_ctrl mem_ctrl0(
     .ram_data_i(ram_w_data),
     .ram_state_i(ram_state),
 
+
+    .inst_fe(inst_fe),
+    .inst_fpc(inst_fpc),
     .inst_o(mem_ctrl_inst),
     .inst_pc(inst_pc),
     .ram_data_o(ram_r_data),
 
-    .pc(pc),
     .cpu_din(mem_din),
     .cpu_dout(mem_dout),
     .cpu_mem_wr(mem_wr),
     .cpu_mem_a(mem_a),
 
-    .ram_sync_i(ram_sync_1),
-    .ram_busy_o(ram_busy),
-    .ram_sync_o(ram_sync_0),
+    .ram_done_o(ram_done),
     .inst_ok(inst_ok)
 
 //    .mctl_stall(mctl_stall)
@@ -303,7 +299,7 @@ mem_ctrl mem_ctrl0(
 
 mem_wb mem_Wb0(
     .clk(clk_in),
-    .rst(rst_in),
+    .rst(rst),
 
     .mem_wd(mem_wd_o),
     .mem_wreg(mem_wreg_o),
@@ -317,14 +313,12 @@ mem_wb mem_Wb0(
 );
 
 stall stall0 (
-  .rst(rst_in),
-  .rdy(rdy_in),
+  .rst(rst),
 
   .if_stall(if_stall),
   .id_stall(id_stall),
 //  .ex_stall(ex_stall),
   .mem_stall(mem_stall),
-  .jmp_stall(jmp_stall),
 //  .mctl_stall(mctl_stall),
   .stall_state(stall_state)
 );

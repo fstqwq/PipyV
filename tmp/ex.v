@@ -217,7 +217,9 @@ always @ ( * ) begin // MUX
                 aluop_o = `MEM_NOP;
             end
             default: begin
-                $display("ex unknown sel : ", alusel_i);
+                wdata_o = `ZeroWord;
+                aluop_o = `MEM_NOP;
+//                $display("ex unknown sel : ", alusel_i);
             end
         endcase
 //        if (wd_o == 5'b1 && wreg_o && wdata_o == 32'h1078) begin

@@ -3,7 +3,6 @@
 module pc_reg (
     input wire                  clk,
     input wire                  rst,
-    input wire                  rdy,
 
     input wire[`StallBus]       stall_state,
 
@@ -25,7 +24,7 @@ always @(negedge clk) begin
     $display("} %d, [%h]", i, stall_state);
 end*/
 always @ (posedge clk) begin
-    if (rst == `RstEnable || rdy == `False)  begin
+    if (rst == `RstEnable)  begin
         pc  <= `ZeroWord;
     end else if(ex_b_flag_i == `True) begin
         pc  <= ex_b_target_i;

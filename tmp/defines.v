@@ -138,10 +138,11 @@
 `define InstAddrBus     31:0
 `define InstBus         31:0
 `define MemBus          31:0
-`define IndexSize       32
-`define CacheBus        10:0
-`define TagBus          17:7
-`define IndexBus        6:2
+
+`define IndexBus        7:2
+`define IndexSize       64
+`define TagBus         9:0
+`define TagBits        17:8
 `define CacheNAN        11'b11000000000
 
 `define INSR            2'b01

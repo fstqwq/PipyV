@@ -28,6 +28,7 @@ always @ (posedge clk) begin
     end else if (stall_state[1] == `False) begin
         id_inst <= if_inst;
         id_pc   <= if_pc;
+//        $display("if_id : %h %h", if_pc, if_inst);
     end else if (stall_state[2] == `False) begin
         id_inst <= `ZeroWord;
         id_pc   <= `ZeroWord;
