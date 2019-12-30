@@ -23,10 +23,10 @@ always @ (*) begin
         stall_state = `IdStall; 
     end else if (if_stall == `True) begin
         stall_state = `IfStall; 
-//    end else if (mctl_stall == `True) begin
-//        stall_state = `MctlStall;
     end else if (jmp_stall == `True) begin
         stall_state = `JmpStall;
+//    end else if (mctl_stall == `True) begin
+//        stall_state = `MctlStall;
     end else begin
         stall_state = `NoStall; 
     end

@@ -37,6 +37,7 @@ integer i;
 
 always @ (posedge clk) begin
     if (rst == `RstEnable) begin
+        i <= 0;
         stage       <= 5'h0;
         ram_addr    <= `ZeroWord;
         ram_data    <= `ZeroWord;
@@ -51,6 +52,7 @@ always @ (posedge clk) begin
         ram_done_o  <= `False;
         predicted_pc <= 32'hffffffff;
     end else begin
+        i <= i + 1;
         if (stage[4] == `True && stage[3] == `Read) begin // Reading
             ram_done_o  <= `False;
             inst_ok     <= `False;
@@ -81,13 +83,13 @@ always @ (posedge clk) begin
                     end
                     3'h1: begin
                         ram_data[15:8]  <= cpu_din;
-                        if (type == `INSR) begin  // prefetch next predicted pc
-                            predicted_pc    <= inst_pc + 4;
-                            cpu_mem_a       <= inst_pc + 7;
+                        if (type == `INSR && inst_fpc == ram_addr) begin  // prefetch next predicted pc
+                            predicted_pc    <= inst_fpc + 4;
+                            cpu_mem_a       <= inst_fpc + 7;
                             cpu_mem_wr      <= `Read;
                         end else begin
-                            predicted_pc    <= inst_pc;
-                            cpu_mem_a       <= inst_pc + 3;
+                            predicted_pc    <= inst_fpc;
+                            cpu_mem_a       <= inst_fpc + 3;
                             cpu_mem_wr      <= `Read;
                         end
                         stage[2:0]      <= 3'h0;
@@ -163,6 +165,10 @@ always @ (posedge clk) begin
                                     cpu_mem_a       <= inst_fpc + 3;
                                 end
                             end
+                            else begin
+                                cpu_mem_wr  <= `Read;
+                                cpu_mem_a   <= `ZeroWord;
+                            end
                         end
                     end
                 endcase
@@ -175,13 +181,13 @@ always @ (posedge clk) begin
                     cpu_dout    <= ram_data[23:16];
                     cpu_mem_a   <= ram_addr + 2;
                     cpu_mem_wr  <= `Write;
-                    stage[1:0]  <= 3'h2;
+                    stage[1:0]  <= 2'h2;
                 end
                 3'h2: begin
                     cpu_dout    <= ram_data[15:8];
                     cpu_mem_a   <= ram_addr + 1;
                     cpu_mem_wr  <= `Write;
-                    stage[1:0]  <= 3'h1;
+                    stage[1:0]  <= 2'h1;
                 end
                 3'h1: begin
                     cpu_dout    <= ram_data[7:0];
@@ -228,6 +234,7 @@ always @ (posedge clk) begin
                     cpu_dout    <= ram_data_i[7:0];
                     stage[4:0]  <= 5'h0;
                     ram_done_o  <= `True;
+//                    $display("(%d)[%h][%c]", i, ram_addr_i + ram_state_i, ram_data_i[7:0]);
                 end
             endcase
         end else if (inst_fe) begin // IF
@@ -240,6 +247,8 @@ always @ (posedge clk) begin
             ram_done_o  <= `False;
             inst_ok     <= `False;
         end else begin
+            cpu_mem_wr  <= `Read;
+            cpu_mem_a   <= `ZeroWord;
             ram_done_o  <= `False;
             inst_ok     <= `False;
         end

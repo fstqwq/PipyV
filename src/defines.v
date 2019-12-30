@@ -139,11 +139,11 @@
 `define InstBus         31:0
 `define MemBus          31:0
 
-`define IndexBus        7:2
-`define IndexSize       64
-`define TagBus         9:0
-`define TagBits        17:8
-`define CacheNAN        11'b11000000000
+`define IndexBus        8:2
+`define IndexSize       128
+`define TagBus          8:0
+`define TagBits         17:9
+`define CacheNAN        9'b111111111
 
 `define INSR            2'b01
 `define RAMR            2'b10
