@@ -1,3 +1,6 @@
+cd ./tmp
+iverilog *.v
+cd ..
 #!/bin/sh
 set -e
 prefix='/opt/riscv'

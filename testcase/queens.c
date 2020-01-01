@@ -3,7 +3,7 @@ int N = 8;
 int row[8];
 int col[8];
 int d[2][16];
-
+int fun;
 void printBoard() {
     int i;
     int j;
@@ -17,6 +17,12 @@ void printBoard() {
         println("");
     }
     println("");
+/*	for (int i = 1; i <= 50 * 10000; i++) {
+		fun += 1;
+		fun *= 2;
+		fun += i;
+		fun /= 2;
+	}*/
     sleep(50); // to prevent UART buffer from overflowing
 }
 

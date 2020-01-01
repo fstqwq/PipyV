@@ -31,12 +31,11 @@ module id (
     output reg[`RegAddrBus]     wd_o,
     output reg                  wreg_o,
 
-//    output reg                  b_flag_o,
-//    output reg[`InstAddrBus]    b_target_o,
+    output reg                  b_flag_o,
+    output reg[`InstAddrBus]    b_target_o,
     output reg[`RegBus]         offset_o,
 
-    output wire                 id_stall,
-    output wire                 jmp_stall
+    output wire                 id_stall
 
 );
 
@@ -68,8 +67,9 @@ always @ (*) begin
     reg2_addr_o = rs2;  
     instvalid   = `InstValid;
     pc_o    = pc_i;
+    b_flag_o = `False;
+    b_target_o = 0;
     if (rst != `RstEnable) begin
-//        $display("ID %h", inst_i);
         case (opcode)
             `OPI: begin
                 case (funct3)
@@ -294,7 +294,6 @@ always @ (*) begin
                 endcase
             end
             `STORE: begin
-        //        $display("STORE");
                 case (funct3)
                     `F3_SB: begin
                         aluop_o =      `EX_SB;
@@ -303,7 +302,6 @@ always @ (*) begin
                         reg1_read_o =  `True;
                         reg2_read_o =  `True;
                         imm =          {{20{S_imm[11]}},S_imm[11:0]};
- //                       $display("IMM = %h S_imm = %h inst = %h", imm, S_imm, inst_i);
                     end
                     `F3_SH: begin
                         aluop_o =      `EX_SH;
@@ -387,9 +385,8 @@ always @ (*) begin
                 reg1_read_o = `False;
                 reg2_read_o = `False;
                 imm =         {{11{UJ_imm[19]}},UJ_imm,1'h0};
-            /*  id jump */
-            //    b_flag_o =    `True;
-            //    b_target_o =  pc_i + {{11{UJ_imm[19]}},UJ_imm,1'h0};
+                b_flag_o =    `True;
+                b_target_o =  pc_i + {{11{UJ_imm[19]}},UJ_imm,1'h0};
             end
             `JALR: begin
                 aluop_o =     `EX_JALR;
@@ -436,7 +433,6 @@ always @ (*) begin
     end else if ((reg1_read_o == `True) && (mem_wreg_i == `True) && (mem_wd_i == reg1_addr_o)) begin
         reg1_o      = mem_wdata_i;
     end else if (reg1_read_o == `True) begin
-    //    $display("reg1 : %h", reg1_data_i);
         reg1_o      = reg1_data_i;
     end else if (reg1_read_o == `False) begin
         reg1_o      = imm;
@@ -455,12 +451,10 @@ always @ (*) begin
         reg2_stall  = `True;
     end else if ((reg2_read_o == `True) && (ex_wreg_i == `True) && (ex_wd_i == reg2_addr_o)) begin
     // writing current register, forward
-//        $display("reg1: forwarding from ex");
         reg2_o      = ex_wdata_i;
     end else if ((reg2_read_o == `True) && (mem_wreg_i == `True) && (mem_wd_i == reg2_addr_o)) begin
         reg2_o      = mem_wdata_i;
     end else if (reg2_read_o == `True) begin
-    //    $display("reg2 : %h", reg2_data_i);
         reg2_o      = reg2_data_i;
     end else if (reg2_read_o == `False) begin
         reg2_o      = imm;
@@ -470,7 +464,6 @@ always @ (*) begin
 end
 
 assign id_stall = reg1_stall | reg2_stall;
-assign jmp_stall = opcode == `JAL | opcode == `JALR | opcode == `BRANCH;
 
 always @ (*) begin // when need 3 operands
     if (rst == `RstEnable) begin

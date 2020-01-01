@@ -1,28 +1,33 @@
 #include "io.h"
 
+int f(int x, int y);
+int g(int x, int y);
 int f(int x, int y) {
-	//outl(x); print(" ");
-	//outl(y); print("\n");
-	if (y == 1) return x;
 	if (y == 0) return 1;
+	if (y == 1) return x;
+	return g(x, y / 2) * g(x, (y + 1) / 2);
+}
+
+int g(int x, int y) {
+	if (y == 0) return 1;
+	if (y == 1) return x;
 	return f(x, y / 2) * f(x, (y + 1) / 2);
 }
 
+int h(int x) {return x % 2 == 0 ? h(x - 1) + 1 : 0;}
+
 int main() {
+
+	for (int i = 1; i <= 6; i++) {
+		if (i % 3 == 0) {
+			outl(i); print(" ");
+		}
+		else {
+			print("# ");
+		}
+	}
+	outl(h(1)); outl(h(2));
+	outl(23456); print(" ");
 	outl(f(2, 15));
+	print("\nclock = "); outl(clock());
 }
-/*#include "io.h"
-int a[2][2];
-int main() {
-	int n = 2, m = 3;
-	for (int i = 1; i <= n + 1; i++)
-		for (int j = 1; j <= m + 1; j++) {
-			a[i % 2][j % 2] ++;
-		}
-	long long ans = 0;
-	for (int i = 0; i < 2; i++)
-		for (int j = 0; j < 2; j++) {
-			ans += (long long)a[i][j] * (a[i][j] - 1) / 2;
-		}
-	outl(ans);
-}*/

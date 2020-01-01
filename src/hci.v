@@ -29,7 +29,7 @@
 
 module hci
 #(
-  parameter SYS_CLK_FREQ = 210000000,
+  parameter SYS_CLK_FREQ = 100000000,
   parameter RAM_ADDR_WIDTH = 17,
   parameter BAUD_RATE = 115200
 )
@@ -240,7 +240,6 @@ always @*
               d_tx_data = io_din;
               d_wr_en   = 1'b1;
             end
-//            $display("HCI write: %h", io_din);
             $write("%c", io_din);
           end
           3'h04: begin      // 0x30004 write: indicates program stop

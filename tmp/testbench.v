@@ -20,8 +20,8 @@ initial begin
   rst=1;
   repeat(50) #1 clk=!clk;
   rst=0; 
-  forever #1 clk=!clk;
-//  repeat(3000) #1 clk=!clk;
+  repeat(1000000) #1 clk=!clk;
+//  forever #1 clk=!clk;
   $finish;
 end
 

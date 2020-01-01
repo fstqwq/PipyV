@@ -26,8 +26,6 @@ module id_ex (
     output reg[`InstAddrBus]   offset_o
 );
 
-//reg b_flag;
-
 always @ (posedge clk) begin
     if (rst == `RstEnable) begin
         ex_aluop    <= `EX_NOP;
@@ -38,11 +36,9 @@ always @ (posedge clk) begin
         ex_wreg     <= `False;
         ex_pc       <= `ZeroWord;
         offset_o    <= `ZeroWord;
-//        b_flag      <= `False;
     end else if (stall_state[3] == `True) begin
 
     end else if (ex_b_flag_i == `True) begin
-//        $display("id_ex : b_flag is on");
         ex_aluop    <= `EX_NOP;
         ex_alusel   <= `EX_RES_NOP;
         ex_reg1     <= `ZeroWord;
@@ -52,19 +48,6 @@ always @ (posedge clk) begin
         ex_pc       <= `ZeroWord;
         offset_o    <= `ZeroWord;
    end else if (stall_state[2] == `False) begin
-/*        if (b_flag == `True) begin
-//           $display("id_ex : b_flag is continuing");
-            ex_aluop    <= `EX_NOP;
-            ex_alusel   <= `EX_RES_NOP;
-            ex_reg1     <= `ZeroWord;
-            ex_reg2     <= `ZeroWord;
-            ex_wd       <= `NOPRegAddr;
-            ex_wreg     <= `False;
-            ex_pc       <= `ZeroWord;
-            offset_o    <= `ZeroWord;
-            b_flag      <= `False;
-        end else begin*/
-        //    if (id_pc) $display("shell %h", id_pc);
             ex_aluop    <= id_aluop;
             ex_alusel   <= id_alusel;
             ex_reg1     <= id_reg1;
@@ -73,8 +56,6 @@ always @ (posedge clk) begin
             ex_wreg     <= id_wreg;
             ex_pc       <= id_pc;
             offset_o    <= offset_i;
-//            $display("id_ex : %h %h %h %h", ex_wd, ex_wreg, ex_aluop, ex_alusel);
-//        end
     end else begin
         ex_aluop    <= `EX_NOP;
         ex_alusel   <= `EX_RES_NOP;

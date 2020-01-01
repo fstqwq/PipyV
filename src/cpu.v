@@ -6,7 +6,7 @@
 module cpu(
     input  wire                 clk_in,			// system clock signal
     input  wire                 rst_in,			// reset signal
-	  input  wire					        rdy_in,			// ready signal, pause cpu when low
+	 input  wire					        rdy_in,			// ready signal, pause cpu when low
 
     input  wire [ 7:0]          mem_din,		// data input bus
     output wire [ 7:0]          mem_dout,		// data output bus
@@ -98,6 +98,8 @@ wire[`RegBus]   ram_addr;
 
 wire                ex_b_flag;
 wire[`InstAddrBus]  ex_b_target;
+wire                id_b_flag;
+wire[`InstAddrBus]  id_b_target;
 wire                ex_ld_flag;
 
 wire[`InstAddrBus]  id_offset;
@@ -125,7 +127,7 @@ regfile regfile1(
 
 pc_reg pc_reg0 (
   .clk(clk_in), .rst(rst), .pc(pc), 
-//  .id_b_flag_i(id_b_flag), .id_b_target_i(id_b_target),
+  .id_b_flag_i(id_b_flag), .id_b_target_i(id_b_target),
   .ex_b_flag_i(ex_b_flag), .ex_b_target_i(ex_b_target),
   .stall_state(stall_state)
 );
@@ -144,6 +146,7 @@ if_id if_id0 (
   .id_pc(id_pc_i),  .id_inst(id_inst_i),
 
   .ex_b_flag_i(ex_b_flag),
+  .id_b_flag_i(id_b_flag),
 
   .stall_state(stall_state)
 );
@@ -156,7 +159,6 @@ id id0(
     .reg2_data_i(reg2_data),
 
     .ex_ld_flag(ex_ld_flag),
-//    .ex_b_flag(ex_b_flag),
     .ex_wreg_i(ex_wreg_o),
     .ex_wdata_i(ex_wdata_o),
     .ex_wd_i(ex_wd_o),    
@@ -174,10 +176,9 @@ id id0(
     
     .wd_o(id_wd_o),           .wreg_o(id_wreg_o),
     .offset_o(id_offset),
-//    .b_flag_o(id_b_flag),     .b_target_o(id_b_target),
+    .b_flag_o(id_b_flag),     .b_target_o(id_b_target),
 
-    .id_stall(id_stall),
-    .jmp_stall(jmp_stall)
+    .id_stall(id_stall)
 );
 
 id_ex id_ex0(
@@ -321,25 +322,8 @@ stall stall0 (
   .id_stall(id_stall),
 //  .ex_stall(ex_stall),
   .mem_stall(mem_stall),
-  .jmp_stall(jmp_stall),
 //  .mctl_stall(mctl_stall),
   .stall_state(stall_state)
 );
-/*
-always @(posedge clk_in)
-begin
-  if (rst_in)
-    begin
-    
-    end
-  else if (!rdy_in)
-    begin
-    
-    end
-  else
-    begin
-    
-    end
-end
-*/
+
 endmodule

@@ -20,13 +20,7 @@ module ex_mem (
     output reg[`MemBus]     mem_mem_addr,
     output reg[`AluOpBus]   mem_aluop
 );
-/*
-reg[`RegAddrBus] last_wd;
-reg last_wreg;
-reg[`RegBus] last_wdata;
-reg[`MemBus] last_addr;
-reg[`AluOpBus]   last_aluop;
-*/
+
 always @ (posedge clk) begin
     if (rst == `RstEnable) begin
         mem_wd          <= `NOPRegAddr;

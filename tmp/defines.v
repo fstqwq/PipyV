@@ -4,13 +4,6 @@
 `define RstEnable           1'b1
 `define RstDisable          1'b0
 `define ZeroWord            32'h00000000
-// For clarity, use True and False
-/*
-`define WriteEnable         1'b1
-`define WriteDisable        1'b0
-`define ReadEnable          1'b1
-`define ReadDisable         1'b0
-*/
 `define Read                1'b0
 `define Write               1'b1
 `define AluOpBus            4:0
@@ -77,7 +70,7 @@
 `define F3_ANDI  3'b111
 `define F3_SLLI  3'b001
 `define F3_SRLI  3'b101
-//`define F3_SRAI  3'b101
+`define F3_SRAI  3'b101
 
 `define F7_SLLI 7'b0000000
 `define F7_SRLI 7'b0000000
@@ -139,15 +132,21 @@
 `define InstBus         31:0
 `define MemBus          31:0
 
-`define IndexBus        7:2
-`define IndexSize       64
-`define TagBus         9:0
-`define TagBits        17:8
-`define CacheNAN        11'b11000000000
+`define IndexBus        9:2
+`define IndexSize       256
+`define TagBus          7:0
+`define TagBits         17:10
+`define ValidBit        7
+`define CacheInvalid    1'b1
+
+`define SCacheTag       16:7
+`define SCacheId        10'h3ff
+`define SCacheIndex     6:0
+`define SCacheSize      128
 
 `define INSR            2'b01
-`define RAMR            2'b10
-`define RAMW            2'b11
+`define RAMO            2'b10
+`define HCIO            2'b11
 `define NONE            2'b00
 
 `define NoStall         6'b000000

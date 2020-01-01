@@ -92,6 +92,8 @@ void move() {
     a[now] = now;
     now++;
 }
+
+int fun;
 int main() {
     int i = 0;
 	int temp = 0;
@@ -125,6 +127,13 @@ int main() {
         move();
         merge();
         show();
+/*		for (int i = 1; i <= 10 * 10000; i++) {
+			fun += 1;
+			fun *= 2;
+			fun += i;
+			fun /= 2;
+		}*/
+//		outl(clock());
         sleep(10); // to prevent UART buffer from overflowing
     }
     print("Total: ");

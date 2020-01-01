@@ -27,21 +27,8 @@ module mem (
     output reg              mem_stall
 );
 
-/*
-
-    input wire[`RegAddrBus] wd_i,
-    input wire              wreg_i,
-    input wire[`RegBus]     wdata_i,
-*/
-
 always @ (*) begin
-    /*
-        When loading data, we need to wait until data is ready;
-        When storing data, we don't need to wait, if no memory operation is needed. 
-    */
-//    $display("aha stall=%d inq=%d pro=%d sync1=%d sync2=%d", mem_stall,     inquiry_i, processed, ram_sync_i, ram_sync_o);
     if (rst == `RstEnable) begin
-//        $display("CLEAR MEM");
         wd_o            = `NOPRegAddr;
         wreg_o          = `False;
         wdata_o         = `ZeroWord;

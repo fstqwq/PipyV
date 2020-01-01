@@ -28,7 +28,7 @@ int qsrt(int l, int r) {
     if (i < r) qsrt(i, r);
     return 0;
 }
-
+int sum = 0;
 int main() {
     int i;
     for (i = 1; i <= n; i++)

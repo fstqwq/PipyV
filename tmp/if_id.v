@@ -7,6 +7,7 @@ module if_id(
     input wire[`InstAddrBus]    if_pc,
     input wire[`InstBus]        if_inst,
 
+    input wire                  id_b_flag_i,
     input wire                  ex_b_flag_i,
 
     input wire[`StallBus]       stall_state,
@@ -29,20 +30,17 @@ always @ (posedge clk) begin
     if (rst == `RstEnable) begin
         id_inst <= `ZeroWord;
         id_pc   <= `ZeroWord;
-//        b_flag  <= `False;
-    end else if (ex_b_flag_i) begin
-    //    $display("if_id : b_flag is on");
+    end else if (stall_state[2] == `True) begin
+
+    end else if (ex_b_flag_i | id_b_flag_i) begin
         id_inst <= `ZeroWord;
         id_pc   <= `ZeroWord;
     end else if (stall_state[1] == `False) begin
         id_inst <= if_inst;
         id_pc   <= if_pc;
-//        $display("if_id : %h %h", if_pc, if_inst);
-    end else if (stall_state[2] == `False) begin
+    end else begin
         id_inst <= `ZeroWord;
         id_pc   <= `ZeroWord;
-    end else begin
-//        $display("if_id : Both stalled");
     end// else both stall, no modification needed
 end
 
