@@ -12,14 +12,14 @@
 
   ##### Cache
 
-  - $1 \text{KiB}$ Direct Mapped Instruction Cache
-  - $128\text{B}$ Direct Mapped Data Cache
-    - Specified for stack elements, the first $128\text{B}$ part of stack is directly replaced by cache.
+  - $$1 \text{KiB}$$ Direct Mapped Instruction Cache
+  - $$128\text{B}$$ Direct Mapped Data Cache
+    - Specified for stack elements, the first $$128\text{B}$$ part of stack is directly replaced by cache.
 
   ##### Quick Instruction Fetch(Fetch with prediction)
 
-  - Sequential instruction fetch takes $4$ cycles.
-  - The memory controller predicts instruction fetch at the second last cycle by $pc + 4$ or $pc$ depending on the type of current reading.
+  - Sequential instruction fetch takes $$4$$ cycles.
+  - The memory controller predicts instruction fetch at the second last cycle by $$pc + 4$$ or $$pc$$ depending on the type of current reading.
 
   ##### Branch Prediction
 
@@ -27,29 +27,29 @@
 
   ##### High Recursion, Division, Printing speed
 
-  - With help of stack cache and `JAR` at ID stage, it runs `gcd.c` with $4171\text{ns}$ using iVerilog.
+  - With help of stack cache and `JAR` at ID stage, it runs `gcd.c` with $$4171\text{ns}$$ using iVerilog.
 
   ##### High frequency on FPGA
 
-  - Achieved $210 \text{MHz}$ .
+  - Achieved $$210 \text{MHz}$$ .
 
     - with very little probability failed, reprogramming FPGA will solve the problem.
-    - Running with frequency over $\sim150 \text{MHz}$ will lead to UART buffer overflow in case `bulgarian.c` and `qsort.c`, longer sleep in source would help.
+    - Running with frequency over $$\sim150 \text{MHz}$$ will lead to UART buffer overflow in case `bulgarian.c` and `qsort.c`, longer sleep in source would help.
 
-  - Best timing of `pi.c` is around $0.68s$, using $210\text{MHz}$ one:
+  - Best timing of `pi.c` is around $$0.68s$$, using $$210\text{MHz}$$ one:
 
     ![ddd](http://fstqwq.pw/wp-content/uploads/2020/01/ddd.png)
 
-  - Best timing of `piljs.c` is $0.0625s$, using $2 10 \text{MHz}$ one:
+  - Best timing of `piljs.c` is $$0.0625s$$, using $$210 \text{MHz}$$ one:
 
     ![ccc](http://fstqwq.pw/wp-content/uploads/2020/01/ccc.png)
 
-  - Best timing of `pi.c` with $100 \text{MHz}$ is about $1.5s$.
+  - Best timing of `pi.c` with $$100 \text{MHz}$$ is about $$1.5s$$.
 
   - I had handled the delays with care, including:
 
     - Branches calculated at EX stage, except `JAL`  jumped at ID stage.
-    - Use sequential circuits instead of combinational circuits when handling cache in order to decrease bottleneck timing slack by $5ns+$.
+    - Use sequential circuits instead of combinational circuits when handling cache in order to decrease bottleneck timing slack by $$5ns+$$.
     - Carefully designed memory controller in order to achieve a fairly good speed.
 
   ### Specification
@@ -64,7 +64,7 @@
 
   ### Problems met when working on it
 
-  1. Implemented BGE with $>$.
+  1. Implemented BGE with $$>$$.
 
      - It took me 2 weeks to find it out.
 
@@ -72,7 +72,7 @@
 
      - It was introduced during the debugging of the last problem.
 
-     - It took me another 2 weeks to figure it out by checking the `$display` of steps.
+     - It took me another 2 weeks to figure it out by checking the `$$display` of steps.
 
      - It took me another single day after ID jump was introduced.
 
@@ -125,7 +125,7 @@
      - I rewrote the MEM, MCTL, IF to solve this problem.
      - During the reconstruction I inspect my code and carefully handled all the known drawbacks, so I can have a good speed on FPGA at last.
 
-  4. When I tried to find a way to fetch in $4$ cycles, I failed with $7, 8, $ or even $10$ cycles.
+  4. When I tried to find a way to fetch in $$4$$ cycles, I failed with $$7, 8, $$ or even $$10$$ cycles.
 
      - Since we need to predict and correct wrong prediction as soon as possible, the signal interactions must be carefully designed - or it will fail.
 
@@ -138,13 +138,13 @@
 
   7. **riscv_top.v acts wrongly**. Let me describe as follow:
 
-     - At the posedge of cycle $0$, MCTL send a request in order to access RAM or I/O.
+     - At the posedge of cycle $$0$$, MCTL send a request in order to access RAM or I/O.
 
-     - At the posedge of cycle $1$, TOP process the request and access RAM or I/O(HCI) by the higher $2$ bits.
+     - At the posedge of cycle $$1$$, TOP process the request and access RAM or I/O(HCI) by the higher $$2$$ bits.
 
-     - At the posedge of cycle $2$, TOP return the data by the type **REQUESTED IN CYCLE $1$ **(**should be cycle** $0$).
+     - At the posedge of cycle $$2$$, TOP return the data by the type **REQUESTED IN CYCLE $$1$$ **(**should be cycle** $$0$$).
 
-     - The solution to this problem is changing the MUX (more precisely, `hci_io_en`) from combinational circuits into sequential circuits, which will precisely introduce a $1$ clock delay.
+     - The solution to this problem is changing the MUX (more precisely, `hci_io_en`) from combinational circuits into sequential circuits, which will precisely introduce a $$1$$ clock delay.
 
      - I didn't change the `hci.v` in my file since it's not for debugging purpose, and there's comment:
 
