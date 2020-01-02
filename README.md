@@ -1,159 +1,229 @@
-* ## Computer Architecture 2019 Fall project: RISC-V CPU
+## Computer Architecture 2019 Fall project: RISC-V CPU
 
-  518030910435 杨宗翰
+518030910435 杨宗翰
 
-  ------
+------
 
-  ### Brief
+### Brief
 
-  The project is a 5-stage pipelined RISC-V ISA CPU implemented in Verilog HDL.
+The project is a 5-stage pipelined RISC-V ISA CPU implemented in Verilog HDL.
 
-  ### Features
+### Features
 
-  ##### Cache
+It is a CPU that aiming at the best speed on FPGA.
 
-  - $$1 \text{KiB}$$ Direct Mapped Instruction Cache
-  - $$128\text{B}$$ Direct Mapped Data Cache
-    - Specified for stack elements, the first $$128\text{B}$$ part of stack is directly replaced by cache.
+##### Cache
 
-  ##### Quick Instruction Fetch(Fetch with prediction)
+- $$1 \text{KiB}$$ Direct Mapped Instruction Cache
+- $$128\text{B}$$ Direct Mapped Data Cache
+  - Specified for stack elements, the first $$128\text{B}$$ part of stack is directly replaced by cache.
+  - No general data cache, because D Cache is actually slow on FPGA we use.
 
-  - Sequential instruction fetch takes $$4$$ cycles.
-  - The memory controller predicts instruction fetch at the second last cycle by $$pc + 4$$ or $$pc$$ depending on the type of current reading.
+##### Quick Instruction Fetch(Fetch with prediction)
 
-  ##### Branch Prediction
+- Sequential instruction fetch takes $$4$$ cycles.
+- The memory controller predicts instruction fetch at the second last cycle by $$pc + 4$$ or $$pc$$ depending on the type of current reading.
 
-  - Statically predicts NO JUMP.
+##### Branch Prediction
 
-  ##### High Recursion, Division, Printing speed
+- Statically predicts NO JUMP.
+- The reason why I don't use BTB/BHT or use static JUMP is that the calculation delay could be the bottleneck of FPGA timing.
 
-  - With help of stack cache and `JAR` at ID stage, it runs `gcd.c` with $$4171\text{ns}$$ using iVerilog.
+##### High Recursion, Division, Printing speed
 
-  ##### High frequency on FPGA
+- With help of stack cache and `JAR` at ID stage, it runs `gcd.c` with $$4171\text{ns}$$ using iVerilog.
 
-  - Achieved $$210 \text{MHz}$$ .
+##### High frequency on FPGA
 
-    - with very little probability failed, reprogramming FPGA will solve the problem.
-    - Running with frequency over $$\sim150 \text{MHz}$$ will lead to UART buffer overflow in case `bulgarian.c` and `qsort.c`, longer sleep in source would help.
+- Achieved $$210 \text{MHz}$$ .
 
-  - Best timing of `pi.c` is around $$0.68s$$, using $$210\text{MHz}$$ one:
+  - Passed all tests with very little probability failed, reprogramming FPGA will solve the problem.
 
-    ![ddd](http://fstqwq.pw/wp-content/uploads/2020/01/ddd.png)
+  - Running with frequency over $$\sim150 \text{MHz}$$ will lead to UART buffer overflow in case `bulgarian.c` and `qsort.c`, longer sleep in source would help.
 
-  - Best timing of `piljs.c` is $$0.0625s$$, using $$210 \text{MHz}$$ one:
+  - Failed on stress test, while $200 \text{MHz} $ passed stress test using $213\text{s}$ (code in *attached sheet*):
 
-    ![ccc](http://fstqwq.pw/wp-content/uploads/2020/01/ccc.png)
+    ![fff](fff.png)
 
-  - Best timing of `pi.c` with $$100 \text{MHz}$$ is about $$1.5s$$.
+- Best timing of `pi.c` is around $$0.68s$$, using $$210\text{MHz}$$ one:
 
-  - I had handled the delays with care, including:
+  ![ddd](ddd.png)
 
-    - Branches calculated at EX stage, except `JAL`  jumped at ID stage.
-    - Use sequential circuits instead of combinational circuits when handling cache in order to decrease bottleneck timing slack by $$5ns+$$.
-    - Carefully designed memory controller in order to achieve a fairly good speed.
+- Best timing of `piljs.c` is $$0.0625s$$, using $$210 \text{MHz}$$ one:
 
-  ### Specification
+  ![ccc](ccc.png)
 
-  ##### Design
+- Best timing of `pi.c` with $$100 \text{MHz}$$ is about $$1.5s$$.
 
-  [TODO]
+- I had handled the delays with care, including:
 
-  ##### Branch
+  - Branches calculated at EX stage, except `JAL`  jumped at ID stage.
+  - Use sequential circuits instead of combinational circuits when handling cache in order to decrease bottleneck timing slack by $$5ns+$$.
+  - Carefully designed memory controller in order to achieve a fairly good speed.
 
-  Jump at EX stage, except `JAL` jump at ID stage. The reason why I don't use BTB/BHT or use static JUMP is that the calculation delay could be the bottleneck of FPGA timing.
+### Specification
 
-  ### Problems met when working on it
+##### Design
 
-  1. Implemented BGE with $$>$$.
+![ggg](ggg.png)
 
-     - It took me 2 weeks to find it out.
+##### Branch
 
-  2. When both stalled and jumped, IF/ID and ID/EX clears wrongly.
+Jump at EX stage, except `JAL` jump at ID stage. 
 
-     - It was introduced during the debugging of the last problem.
+##### Hazard
 
-     - It took me another 2 weeks to figure it out by checking the `$$display` of steps.
+1. Data forwarding : $\text{EX} \rightarrow \text{ID}, \text{MEM}\rightarrow\text{ID}$
 
-     - It took me another single day after ID jump was introduced.
+   The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$ is that $\text{EX}$ stage is slow, comparing with $\text{ID}, \text{EX}$ is a worse choice.
 
-     - I hacked a few classmates by a C source. This is a simple test which can infer if there's problem with stall and jump:
+   
 
-       ```c
-       #include "io.h"
-       int f(int x, int y);
-       int g(int x, int y); // avoid tail call optimization
-       int f(int x, int y) {
-       	if (y == 0) return 1;
-       	if (y == 1) return x;
-       	return g(x, y / 2) * g(x, (y + 1) / 2);
-       }
-       int g(int x, int y) {
-       	if (y == 0) return 1;
-       	if (y == 1) return x;
-       	return f(x, y / 2) * f(x, (y + 1) / 2);
-       }
-       int h(int x) {return x % 2 == 0 ? h(x - 1) + 1 : 0;}
-       int main() {
-       	for (int i = 1; i <= 6; i++) {
-       		if (i % 3 == 0) {
-       			outl(i); print(" ");
-       		}
-       		else {
-       			print("# ");
-       		}
-       	}
-       	outl(h(1)); outl(h(2));
-       	outl(23456); print(" ");
-       	outl(f(2, 15));
-       	print("\nclock = "); outl(clock());
-       }
-       ```
+### Problems met when working on it
 
-       ```
-       # # 3 # # 6 0123456 32768
-       clock = [A Number Greater than 0]
-       ```
+1. Implemented BGE with $$>$$.
 
-       *p.s.* enable clock in simulation requires comment something in `hci.v` like this:
+   - It took me 2 weeks to find it out.
 
-       ```verilog
-       assign d_cpu_cycle_cnt = /*active ? q_cpu_cycle_cnt : */q_cpu_cycle_cnt + 1'b1;
-       ```
+2. When both stalled and jumped, IF/ID and ID/EX clears wrongly.
 
-  3. The first version failed on FPGA, because MEM latched so much that I can't fix.
+   - It was introduced during the debugging of the last problem.
 
-     - I rewrote the MEM, MCTL, IF to solve this problem.
-     - During the reconstruction I inspect my code and carefully handled all the known drawbacks, so I can have a good speed on FPGA at last.
+   - It took me another 2 weeks to figure it out by checking the `$$display` of steps.
 
-  4. When I tried to find a way to fetch in $$4$$ cycles, I failed with $$7, 8, $$ or even $$10$$ cycles.
+   - It took me another single day after ID jump was introduced.
 
-     - Since we need to predict and correct wrong prediction as soon as possible, the signal interactions must be carefully designed - or it will fail.
+   - I hacked a few classmates by a C source. This is a simple test which can infer if there's problem with stall and jump:
 
-  5. `assign rst = rst_in | (~rdy_in);`
+     ```c
+     #include "io.h"
+     int f(int x, int y);
+     int g(int x, int y); // avoid tail call optimization
+     int f(int x, int y) {
+     	if (y == 0) return 1;
+     	if (y == 1) return x;
+     	return g(x, y / 2) * g(x, (y + 1) / 2);
+     }
+     int g(int x, int y) {
+     	if (y == 0) return 1;
+     	if (y == 1) return x;
+     	return f(x, y / 2) * f(x, (y + 1) / 2);
+     }
+     int h(int x) {return x % 2 == 0 ? h(x - 1) + 1 : 0;}
+     int main() {
+     	for (int i = 1; i <= 6; i++) {
+     		if (i % 3 == 0) {
+     			outl(i); print(" ");
+     		}
+     		else {
+     			print("# ");
+     		}
+     	}
+     	outl(h(1)); outl(h(2));
+     	outl(23456); print(" ");
+     	outl(f(2, 15));
+     	print("\nclock = "); outl(clock());
+     }
+     ```
 
-  6. `ram_data_o  <= {24'h0,sdata[ram_addr_i[``SCacheIndex] + 1],sdata[ram_addr_i[``SCacheIndex]]};`
+     ```
+     # # 3 # # 6 0123456 32768
+     clock = [A Number Greater than 0]
+     ```
 
-     - Note that it contains a 40 Byte output for a word
-     - ... but it only failed during running testcases like `bulgarian.c`
+     *p.s.* enable clocking in simulation requires comment something in `hci.v` like this:
 
-  7. **riscv_top.v acts wrongly**. Let me describe as follow:
+     ```verilog
+     assign d_cpu_cycle_cnt = /*active ? q_cpu_cycle_cnt : */q_cpu_cycle_cnt + 1'b1;
+     ```
 
-     - At the posedge of cycle $$0$$, MCTL send a request in order to access RAM or I/O.
+3. The first version failed on FPGA, because MEM latched so much that I can't fix.
 
-     - At the posedge of cycle $$1$$, TOP process the request and access RAM or I/O(HCI) by the higher $$2$$ bits.
+   - I rewrote the MEM, MCTL, IF to solve this problem.
+   - During the reconstruction I inspect my code and carefully handled all the known drawbacks, so I can have a good speed on FPGA at last.
 
-     - At the posedge of cycle $$2$$, TOP return the data by the type **REQUESTED IN CYCLE $$1$$ **(**should be cycle** $$0$$).
+4. When I tried to find a way to fetch in $$4$$ cycles, I failed with $$7, 8, $$ or even $$10$$ cycles.
 
-     - The solution to this problem is changing the MUX (more precisely, `hci_io_en`) from combinational circuits into sequential circuits, which will precisely introduce a $$1$$ clock delay.
+   - Since we need to predict and correct wrong prediction as soon as possible, the signal interactions must be carefully designed - or it will fail.
 
-     - I didn't change the `hci.v` in my file since it's not for debugging purpose, and there's comment:
+5. `assign rst = rst_in | (~rdy_in);`
 
-       `modification allowed for debugging purposes`
+6. `ram_data_o  <= {24'h0,sdata[ram_addr_i[``SCacheIndex] + 1],sdata[ram_addr_i[``SCacheIndex]]};`
 
-  ### Acknowledgement
+   - Note that it contains a 40 Byte output for a word
+   - ... but it only failed during running testcases like `bulgarian.c`
 
-  - Special thanks to 李照宇 for his guidance of Verilog, Vivado and FPGA, and helped and listened to me with a huge number of strange problems I met for a long time.
-  - Thanks to 张志成, 于峥 for their help of setting up FPGA.
-  - Thanks to 陈伟哲 of his references of understanding of 5-stage pipelined CPU.
-  - Thanks to a lot of other classmates for discussing details.
-  - Thanks to 雷思磊 for his great《自己动手写 CPU》.
+7. **riscv_top.v acts wrongly**. Let me describe as follow:
+
+   - At the posedge of cycle $$0$$, MCTL send a request in order to access RAM or I/O.
+
+   - At the posedge of cycle $$1$$, TOP process the request and access RAM or I/O(HCI) by the higher $$2$$ bits.
+
+   - At the posedge of cycle $$2$$, TOP return the data by the type **REQUESTED IN CYCLE $$1$$ **(**should be cycle** $$0$$).
+
+   - The solution to this problem is changing the MUX (more precisely, `hci_io_en`) from combinational circuits into sequential circuits, which will precisely introduce a $$1$$ clock delay.
+
+   - I didn't change the `hci.v` in my file since it's not for debugging purpose, and there's comment:
+
+     `modification allowed for debugging purposes`
+
+### Acknowledgement
+
+- Special thanks to 李照宇 for his guidance of Verilog, Vivado and FPGA, and helped and listened to me with a huge number of strange problems I met for a long time.
+- Thanks to 张志成, 于峥 for their help of setting up FPGA.
+- Thanks to 陈伟哲 of his references of understanding of 5-stage pipelined CPU.
+- Thanks to a lot of other classmates for discussing details.
+- Thanks to 雷思磊 for his great《自己动手写 CPU》.
+
+### Attached Sheet
+
+Thanks 于峥 for this code.
+
+```c
+#include "io.h"
+#define putchar outb
+float f(float x, float y, float z) {
+    float a = x * x + 9.0f / 4.0f * y * y + z * z - 1;
+    return a * a * a - x * x * z * z * z - 9.0f / 80.0f * y * y * z * z * z;
+}
+
+float h(float x, float z) {
+    for (float y = 1.0f; y >= 0.0f; y -= 0.001f)
+        if (f(x, y, z) <= 0.0f)
+            return y;
+    return 0.0f;
+}
+
+float mysqrt(float x) {
+  if (x == 0) return 0;
+  int i;
+  double v = x / 2;
+  for (i = 0; i < 50; ++i)
+    v = (v + x / v)/2;
+  
+  return v;
+}
+
+int main() {
+    for (float z = 1.5f; z > -1.5f; z -= 0.05f) {
+        for (float x = -1.5f; x < 1.5f; x += 0.025f) {
+            float v = f(x, 0.0f, z);
+            if (v <= 0.0f) {
+                float y0 = h(x, z);
+                float ny = 0.01f;
+                float nx = h(x + ny, z) - y0;
+                float nz = h(x, z + ny) - y0;
+                float nd = 1.0f / mysqrt(nx * nx + ny * ny + nz * nz);
+                float d = (nx + ny - nz) * nd * 0.5f + 0.5f;
+                int index = (int)(d * 5.0f);
+                putchar(".:-=+*#%@"[index]);
+            }
+            else
+                putchar('_');
+            //sleep(1);
+        }
+        putchar('\n');
+    }
+}
+```
+
