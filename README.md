@@ -171,7 +171,8 @@ The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$
 
 - Special thanks to 李照宇 for his guidance of Verilog, Vivado and FPGA, and helped and listened to me with a huge number of strange problems I met for a long time.
 - Thanks to 张志成, 于峥 for their help of setting up FPGA.
-- Thanks to 陈伟哲 of his references of understanding of 5-stage pipelined CPU.
+- Thanks to 陈伟哲 for his references of understanding of 5-stage pipelined CPU.
+- Thanks to 姚远 for his inspiration of branch predictor.
 - Thanks to a lot of other classmates for discussing details.
 - Thanks to 雷思磊 for his great《自己动手写 CPU》.
 
