@@ -17,7 +17,7 @@ It is a CPU that aiming at the best speed on FPGA.
 - $$1 \text{KiB}$$ Direct Mapped Instruction Cache
 - $$128\text{B}$$ Direct Mapped Data Cache
   - Specified for stack elements, the first $$128\text{B}$$ part of stack is directly replaced by cache.
-  - No general data cache, because D Cache is actually slow on FPGA we use.
+  - No general data cache, because D cache is actually slow on FPGA we use.
 
 ##### Quick Instruction Fetch(Fetch with prediction)
 
@@ -26,34 +26,34 @@ It is a CPU that aiming at the best speed on FPGA.
 
 ##### Branch Prediction
 
-- Statically predicts NO JUMP.
-- The reason why I don't use BTB/BHT or use static JUMP is that the calculation delay could be the bottleneck of FPGA timing.
+- Branch Target Buffer with index size $$128$$.
+- Using $2\text{-bit}$ scheme.
 
 ##### High Recursion, Division, Printing speed
 
-- With help of stack cache and `JAR` at ID stage, it runs `gcd.c` with $$4171\text{ns}$$ using iVerilog.
+- With stack cache, `JAR` at ID stage and branch prediction, it simulates `gcd.c` with $$3999\text{ns}$$ using iVerilog.
 
 ##### High frequency on FPGA
 
-- Achieved $$210 \text{MHz}$$ .
+- Achieved $$210 \text{MHz}$$ (without predictor), $200\text{MHz}$ (with predictor).
 
   - Passed all tests with very little probability failed, reprogramming FPGA will solve the problem.
 
-  - Running with frequency over $$\sim150 \text{MHz}$$ will lead to UART buffer overflow in case `bulgarian.c` and `qsort.c`, longer sleep in source would help.
+  - Note that running with frequency over $$\sim150 \text{MHz}$$ will lead to UART buffer overflow in case `bulgarian.c` and `qsort.c`, longer sleep in source would help.
 
-  - Failed on stress test, while $200 \text{MHz} $ passed stress test using $213\text{s}$ (code in *attached sheet*):
+  - Failed on stress test, while $190 \text{MHz} $ passed stress test using $133s$ (code in *attached sheet*):
 
     ![fff](fff.png)
 
-- Best timing of `pi.c` is around $$0.68s$$, using $$210\text{MHz}$$ one:
+- Best timing of `pi.c` is around $$0.56s$$, using $$200 \text{MHz}$$ one:
 
   ![ddd](ddd.png)
 
-- Best timing of `piljs.c` is $$0.0625s$$, using $$210 \text{MHz}$$ one:
+- Best timing of `piljs.c` is $$0.046875s$$, using $$200 \text{MHz}$$ one:
 
   ![ccc](ccc.png)
 
-- Best timing of `pi.c` with $$100 \text{MHz}$$ is about $$1.5s$$.
+- Best timing of `pi.c` with $$100 \text{MHz}$$ is  $$1.2s$$.
 
 - I had handled the delays with care, including:
 
@@ -73,11 +73,11 @@ Jump at EX stage, except `JAL` jump at ID stage.
 
 ##### Hazard
 
-1. Data forwarding : $\text{EX} \rightarrow \text{ID}, \text{MEM}\rightarrow\text{ID}$
+Data forwarding : $\text{EX} \rightarrow \text{ID}, \text{MEM}\rightarrow\text{ID}$
 
-   The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$ is that $\text{EX}$ stage is slow, comparing with $\text{ID}, \text{EX}$ is a worse choice.
+The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$ is that $\text{EX}$ stage is slow, comparing with $\text{ID}, \text{EX}$ is a worse choice.
 
-   
+
 
 ### Problems met when working on it
 
