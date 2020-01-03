@@ -159,7 +159,7 @@ The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$
 
    - At the posedge of cycle $1$, TOP process the request and access RAM or I/O(HCI) by the higher $2$ bits.
 
-   - At the posedge of cycle $2$, TOP return the data by the type **REQUESTED IN CYCLE $1$ **(**should be cycle** $0$).
+   - At the posedge of cycle $2$, TOP return the data by the type **REQUESTED IN CYCLE** $1$(**should be cycle** $0$).
 
    - The solution to this problem is changing the MUX (more precisely, `hci_io_en`) from combinational circuits into sequential circuits, which will precisely introduce a $1$ clock delay.
 
