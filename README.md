@@ -14,51 +14,51 @@ It is a CPU that aiming at the best speed on FPGA.
 
 ##### Cache
 
-- $$1 \text{KiB}$$ Direct Mapped Instruction Cache
-- $$128\text{B}$$ Direct Mapped Data Cache
-  - Specified for stack elements, the first $$128\text{B}$$ part of stack is directly replaced by cache.
+- $1 \text{KiB}$ Direct Mapped Instruction Cache
+- $128\text{B}$ Direct Mapped Data Cache
+  - Specified for stack elements, the first $128\text{B}$ part of stack is directly replaced by cache.
   - No general data cache, because D cache is actually slow on FPGA we use.
 
 ##### Quick Instruction Fetch(Fetch with prediction)
 
-- Sequential instruction fetch takes $$4$$ cycles.
-- The memory controller predicts instruction fetch at the second last cycle by $$pc + 4$$ or $$pc$$ depending on the type of current reading.
+- Sequential instruction fetch takes $4$ cycles.
+- The memory controller predicts instruction fetch at the second last cycle by $pc + 4$ or $pc$ depending on the type of current reading.
 
 ##### Branch Prediction
 
-- Branch Target Buffer with index size $$128$$.
+- Branch Target Buffer with index size $128$.
 - Using $2\text{-bit}$ scheme.
 
 ##### High Recursion, Division, Printing speed
 
-- With stack cache, `JAR` at ID stage and branch prediction, it simulates `gcd.c` with $$3999\text{ns}$$ using iVerilog.
+- With stack cache, `JAR` at ID stage and branch prediction, it simulates `gcd.c` with $3999\text{ns}$ using iVerilog.
 
 ##### High frequency on FPGA
 
-- Achieved $$210 \text{MHz}$$ (without predictor), $200\text{MHz}$ (with predictor).
+- Achieved $210 \text{MHz}$ (without predictor), $200\text{MHz}$ (with predictor).
 
   - Passed all tests with very little probability failed, reprogramming FPGA will solve the problem.
 
-  - Note that running with frequency over $$\sim150 \text{MHz}$$ will lead to UART buffer overflow in case `bulgarian.c` and `qsort.c`, longer sleep in source would help.
+  - Note that running with frequency over $\sim150 \text{MHz}$ will lead to UART buffer overflow in case `bulgarian.c` and `qsort.c`, longer sleep in source would help.
 
   - Failed on stress test, while $190 \text{MHz} $ passed stress test using $133s$ (code in *attached sheet*):
 
     ![fff](fff.png)
 
-- Best timing of `pi.c` is around $$0.56s$$, using $$200 \text{MHz}$$ one:
+- Best timing of `pi.c` is around $0.56s$, using $200 \text{MHz}$ one:
 
   ![ddd](ddd.png)
 
-- Best timing of `piljs.c` is $$0.046875s$$, using $$200 \text{MHz}$$ one:
+- Best timing of `piljs.c` is $0.046875s$, using $200 \text{MHz}$ one:
 
   ![ccc](ccc.png)
 
-- Best timing of `pi.c` with $$100 \text{MHz}$$ is  $$1.2s$$.
+- Best timing of `pi.c` with $100 \text{MHz}$ is  $1.2s$.
 
 - I had handled the delays with care, including:
 
   - Branches calculated at EX stage, except `JAL`  jumped at ID stage.
-  - Use sequential circuits instead of combinational circuits when handling cache in order to decrease bottleneck timing slack by $$5ns+$$.
+  - Use sequential circuits instead of combinational circuits when handling cache in order to decrease bottleneck timing slack by $5ns+$.
   - Carefully designed memory controller in order to achieve a fairly good speed.
 
 ### Specification
@@ -81,7 +81,7 @@ The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$
 
 ### Problems met when working on it
 
-1. Implemented BGE with $$>$$.
+1. Implemented BGE with $>$.
 
    - It took me 2 weeks to find it out.
 
@@ -89,7 +89,7 @@ The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$
 
    - It was introduced during the debugging of the last problem.
 
-   - It took me another 2 weeks to figure it out by checking the `$$display` of steps.
+   - It took me another 2 weeks to figure it out by checking the `$display` of steps.
 
    - It took me another single day after ID jump was introduced.
 
@@ -142,7 +142,7 @@ The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$
    - I rewrote the MEM, MCTL, IF to solve this problem.
    - During the reconstruction I inspect my code and carefully handled all the known drawbacks, so I can have a good speed on FPGA at last.
 
-4. When I tried to find a way to fetch in $$4$$ cycles, I failed with $$7, 8, $$ or even $$10$$ cycles.
+4. When I tried to find a way to fetch in $4$ cycles, I failed with $7, 8, $ or even $10$ cycles.
 
    - Since we need to predict and correct wrong prediction as soon as possible, the signal interactions must be carefully designed - or it will fail.
 
@@ -155,13 +155,13 @@ The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$
 
 7. **riscv_top.v acts wrongly**. Let me describe as follow:
 
-   - At the posedge of cycle $$0$$, MCTL send a request in order to access RAM or I/O.
+   - At the posedge of cycle $0$, MCTL send a request in order to access RAM or I/O.
 
-   - At the posedge of cycle $$1$$, TOP process the request and access RAM or I/O(HCI) by the higher $$2$$ bits.
+   - At the posedge of cycle $1$, TOP process the request and access RAM or I/O(HCI) by the higher $2$ bits.
 
-   - At the posedge of cycle $$2$$, TOP return the data by the type **REQUESTED IN CYCLE $$1$$ **(**should be cycle** $$0$$).
+   - At the posedge of cycle $2$, TOP return the data by the type **REQUESTED IN CYCLE $1$ **(**should be cycle** $0$).
 
-   - The solution to this problem is changing the MUX (more precisely, `hci_io_en`) from combinational circuits into sequential circuits, which will precisely introduce a $$1$$ clock delay.
+   - The solution to this problem is changing the MUX (more precisely, `hci_io_en`) from combinational circuits into sequential circuits, which will precisely introduce a $1$ clock delay.
 
    - I didn't change the `hci.v` in my file since it's not for debugging purpose, and there's comment:
 
