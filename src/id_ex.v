@@ -11,6 +11,9 @@ module id_ex (
     input wire                  id_wreg,
     input wire[`InstAddrBus]    id_pc,
     input wire[`InstAddrBus]    offset_i,
+    
+    input wire                  jmp_i,
+    output reg                  jmp_o,
 
     input wire                  ex_b_flag_i,
     
@@ -36,6 +39,7 @@ always @ (posedge clk) begin
         ex_wreg     <= `False;
         ex_pc       <= `ZeroWord;
         offset_o    <= `ZeroWord;
+        jmp_o       <= `False;
     end else if (stall_state[3] == `True) begin
 
     end else if (ex_b_flag_i == `True) begin
@@ -47,15 +51,17 @@ always @ (posedge clk) begin
         ex_wreg     <= `False;
         ex_pc       <= `ZeroWord;
         offset_o    <= `ZeroWord;
+        jmp_o       <= `False;
    end else if (stall_state[2] == `False) begin
-            ex_aluop    <= id_aluop;
-            ex_alusel   <= id_alusel;
-            ex_reg1     <= id_reg1;
-            ex_reg2     <= id_reg2;
-            ex_wd       <= id_wd;
-            ex_wreg     <= id_wreg;
-            ex_pc       <= id_pc;
-            offset_o    <= offset_i;
+        jmp_o       <= jmp_i;
+        ex_aluop    <= id_aluop;
+        ex_alusel   <= id_alusel;
+        ex_reg1     <= id_reg1;
+        ex_reg2     <= id_reg2;
+        ex_wd       <= id_wd;
+        ex_wreg     <= id_wreg;
+        ex_pc       <= id_pc;
+        offset_o    <= offset_i;
     end else begin
         ex_aluop    <= `EX_NOP;
         ex_alusel   <= `EX_RES_NOP;
@@ -65,6 +71,7 @@ always @ (posedge clk) begin
         ex_wreg     <= `False;
         ex_pc       <= `ZeroWord;
         offset_o    <= `ZeroWord;
+        jmp_o       <= `False;
     end
 end
 endmodule

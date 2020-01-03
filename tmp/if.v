@@ -30,7 +30,7 @@ integer i;
 always @ (posedge clk) begin
     if (rst) begin
         for (i = 0; i < `IndexSize; i = i + 1) begin
-            tag[i][`ValidBit] <= `CacheInvalid;
+            tag[i][`ValidBit] <= `InstInvalid;
         end
         inst_fpc    <= `ZeroWord;
     end else begin

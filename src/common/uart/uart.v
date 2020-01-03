@@ -27,7 +27,7 @@
 
 module uart
 #(
-  parameter SYS_CLK_FREQ = 50000000,
+  parameter SYS_CLK_FREQ = 190000000,
   parameter BAUD_RATE    = 19200,
   parameter DATA_BITS    = 8,
   parameter STOP_BITS    = 1,

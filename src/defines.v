@@ -8,7 +8,6 @@
 `define Write               1'b1
 `define AluOpBus            4:0
 `define AluSelBus           2:0
-`define InstValid           1'b0
 `define InstInvalid         1'b1
 `define Stop                1'b1
 `define NoStop              1'b0
@@ -137,12 +136,17 @@
 `define TagBus          7:0
 `define TagBits         17:10
 `define ValidBit        7
-`define CacheInvalid    1'b1
 
 `define SCacheTag       16:7
 `define SCacheId        10'h3ff
 `define SCacheIndex     6:0
 `define SCacheSize      128
+
+`define PIndexBus       9:2
+`define PIndexSize      256
+`define PTagBus         7:0
+`define PTagBits        17:10
+`define PValidBit       7
 
 `define INSR            2'b01
 `define RAMO            2'b10

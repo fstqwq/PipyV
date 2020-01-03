@@ -83,6 +83,17 @@ wire[`RegBus]     reg2_data;
 wire[`RegAddrBus] reg1_addr;
 wire[`RegAddrBus] reg2_addr;
 
+wire              je;
+wire              if_jmp;
+wire              if_id_jmp;
+wire              id_jmp;
+wire              id_ex_jmp;
+wire              ex_jmp;
+wire              is_jmp;
+wire[`InstAddrBus]dest;
+wire              jmp_res;
+wire[`InstAddrBus]jdest;
+
 wire[`RegBus]  ram_r_data;
 wire            inquiry;
 wire            ram_done;
@@ -125,15 +136,26 @@ regfile regfile1(
     .r2_req(reg2_read),  .r2_addr(reg2_addr), .r2_data(reg2_data)
 );
 
+predictor predictor0 (
+  .clk(clk_in), .rst(rst),
+  .pc_if(pc),
+  .je(je), .jdest(jdest),
+  .pc_ex(ex_pc),
+  .is_jmp(is_jmp),
+  .dest(dest),
+  .jmp_res(jmp_res)
+);
+
 pc_reg pc_reg0 (
   .clk(clk_in), .rst(rst), .pc(pc), 
+  .je(je), .jdest(jdest), .jmp(id_jmp),
   .id_b_flag_i(id_b_flag), .id_b_target_i(id_b_target),
   .ex_b_flag_i(ex_b_flag), .ex_b_target_i(ex_b_target),
   .stall_state(stall_state)
 );
 
 IF if0 (
-  .clk(clk_in), .rst(rst), 
+  .clk(clk_in), .rst(rst),
   .pc(pc),      .inst(mem_ctrl_inst), .inst_ok(inst_ok), .inst_pc(inst_pc),
   .pc_o(if_pc), .inst_o(if_inst),
   .inst_fe(inst_fe), .inst_fpc(inst_fpc),
@@ -155,6 +177,7 @@ id id0(
     .rst(rst),
     .pc_i(id_pc_i),
     .inst_i(id_inst_i),
+    .jmp_i(id_jmp), .jmp_o(id_ex_jmp), 
     .reg1_data_i(reg1_data), 
     .reg2_data_i(reg2_data),
 
@@ -185,6 +208,7 @@ id_ex id_ex0(
     .clk(clk_in),
     .rst(rst),
 
+    .jmp_i(id_ex_jmp), .jmp_o(ex_jmp), 
     .id_aluop(id_aluop_o),   .id_alusel(id_alusel_o),
     .id_reg1(id_reg1_o),     .id_reg2(id_reg2_o),
     .id_wd(id_wd_o),         .id_wreg(id_wreg_o),
@@ -205,6 +229,7 @@ ex ex0(
     .rst(rst),
 
     .pc_i(ex_pc),
+    .jmp_i(ex_jmp), 
     .aluop_i(ex_aluop_i), .alusel_i(ex_alusel_i),
     .reg1_i(ex_reg1_i),   .reg2_i(ex_reg2_i),
     .wd_i(ex_wd_i),
@@ -216,6 +241,9 @@ ex ex0(
     .wdata_o(ex_wdata_o),
     .b_flag_o(ex_b_flag),
     .b_target_o(ex_b_target),
+    .is_jmp(is_jmp),
+    .dest(dest),
+    .jmp_res(jmp_res),
     .aluop_o(ex_aluop_o),
     .mem_addr_o(mem_addr),
     

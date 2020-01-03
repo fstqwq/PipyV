@@ -3,6 +3,8 @@ module ex (
     input wire      rst,
 
     input wire[`InstAddrBus]    pc_i,
+    input wire                  jmp_i,
+
     input wire[`AluOpBus]       aluop_i,
     input wire[`AluSelBus]      alusel_i,
     input wire[`RegBus]         reg1_i,
@@ -18,6 +20,9 @@ module ex (
 
     output reg                  b_flag_o,
     output reg[`InstAddrBus]    b_target_o,
+    output reg                  is_jmp,
+    output wire[`InstAddrBus]   dest,
+    output reg                  jmp_res,
 
     output reg[`AluOpBus]       aluop_o,
     output reg[`RegBus]         mem_addr_o,
@@ -31,12 +36,14 @@ reg[`RegBus] shiftout;
 reg[`RegBus] arithout;
 
 wire[`InstAddrBus] tmp;
-assign tmp = reg1_i + reg2_i;
-
+assign tmp      = reg1_i + reg2_i;
+assign dest     = pc_i + offset_i;
 
 always @ (*) begin // Branch and Jump
     b_target_o  = `ZeroWord;
     b_flag_o    = `False;
+    is_jmp      = `False;
+    jmp_res     = `False;
     if (rst != `RstEnable) begin
         case (aluop_i)
             `EX_JAL: begin
@@ -48,28 +55,70 @@ always @ (*) begin // Branch and Jump
                 b_flag_o    = `True;
             end
             `EX_BEQ: begin
-                b_target_o  = pc_i + offset_i;
-                b_flag_o    = (reg1_i == reg2_i);
+                is_jmp = `True;
+                if (reg1_i == reg2_i) begin
+                    b_target_o  = pc_i + offset_i;
+                    b_flag_o    = !jmp_i;
+                    jmp_res     = `True;
+                end else begin
+                    b_target_o  = pc_i + 4;
+                    b_flag_o    = jmp_i;
+                end
             end
             `EX_BNE: begin
-                b_target_o  = pc_i + offset_i;
-                b_flag_o    = (reg1_i != reg2_i);
+                is_jmp = `True;
+                if (reg1_i != reg2_i) begin
+                    b_target_o  = pc_i + offset_i;
+                    b_flag_o    = !jmp_i;
+                    jmp_res     = `True;
+                end else begin
+                    b_target_o  = pc_i + 4;
+                    b_flag_o    = jmp_i;
+                end
             end
             `EX_BLT: begin
-                b_target_o  = pc_i + offset_i;
-                b_flag_o    = ($signed(reg1_i) < $signed(reg2_i));
+                is_jmp = `True;
+                if ($signed(reg1_i) < $signed(reg2_i)) begin
+                    b_target_o  = pc_i + offset_i;
+                    b_flag_o    = !jmp_i;
+                    jmp_res     = `True;
+                end else begin
+                    b_target_o  = pc_i + 4;
+                    b_flag_o    = jmp_i;
+                end
             end
             `EX_BGE: begin
-                b_target_o  = pc_i + offset_i;
-                b_flag_o    = ($signed(reg1_i) >= $signed(reg2_i));
+                is_jmp = `True;
+                if ($signed(reg1_i) >= $signed(reg2_i)) begin
+                    b_target_o  = pc_i + offset_i;
+                    b_flag_o    = !jmp_i;
+                    jmp_res     = `True;
+                end else begin
+                    b_target_o  = pc_i + 4;
+                    b_flag_o    = jmp_i;
+                end
             end
             `EX_BLTU: begin
-                b_target_o  = pc_i + offset_i;
-                b_flag_o    = (reg1_i < reg2_i);
+                is_jmp = `True;
+                if (reg1_i < reg2_i) begin
+                    b_target_o  = pc_i + offset_i;
+                    b_flag_o    = !jmp_i;
+                    jmp_res     = `True;
+                end else begin
+                    b_target_o  = pc_i + 4;
+                    b_flag_o    = jmp_i;
+                end
             end
             `EX_BGEU: begin
-                b_target_o  = pc_i + offset_i;
-                b_flag_o    = (reg1_i >= reg2_i);
+                is_jmp = `True;
+                if (reg1_i >= reg2_i) begin
+                    b_target_o  = pc_i + offset_i;
+                    b_flag_o    = !jmp_i;
+                    jmp_res     = `True;
+                end else begin
+                    b_target_o  = pc_i + 4;
+                    b_flag_o    = jmp_i;
+                end
             end
             default: begin
             end

@@ -3,6 +3,7 @@
 module id (
     input wire rst,
     input wire[`InstAddrBus]    pc_i,
+    input wire                  jmp_i,
     input wire[`InstBus]        inst_i,
 
     input wire[`RegBus]         reg1_data_i,
@@ -24,6 +25,7 @@ module id (
     output reg[`RegAddrBus]     reg2_addr_o,
 
     output reg[`InstAddrBus]    pc_o,
+    output reg                  jmp_o,
     output reg[`AluOpBus]       aluop_o,
     output reg[`AluSelBus]      alusel_o,
     output reg[`RegBus]         reg1_o,
@@ -51,7 +53,6 @@ wire[11:0] SB_imm =  {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8]};
 wire[19:0] U_imm =  inst_i[31:12];
 wire[19:0] UJ_imm =  {inst_i[31], inst_i[19:12], inst_i[20], inst_i[30:21]};
 reg[31:0] imm;
-reg instvalid;
 reg reg1_stall;
 reg reg2_stall;
 
@@ -65,10 +66,10 @@ always @ (*) begin
     wd_o        = rd;
     reg1_addr_o = rs1;
     reg2_addr_o = rs2;  
-    instvalid   = `InstValid;
-    pc_o    = pc_i;
-    b_flag_o = `False;
-    b_target_o = 0;
+    pc_o        = pc_i;
+    b_flag_o    = `False;
+    b_target_o  = 0;
+    jmp_o       = jmp_i;
     if (rst != `RstEnable) begin
         case (opcode)
             `OPI: begin
