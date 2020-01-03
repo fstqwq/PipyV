@@ -27,25 +27,23 @@ It is a CPU that aiming at the best speed on FPGA.
 ##### Branch Prediction
 
 - Branch Target Buffer with index size $128$.
-- Using $2\text{-bit}$ scheme.
+- Using $2\text{-bit}$ scheme making prediction for branches and `JAL`.
 
 ##### High Recursion, Division, Printing speed
 
-- With stack cache, `JAR` at ID stage and branch prediction, it simulates `gcd.c` with $3999\text{ns}$ using iVerilog.
+- With stack cache and branch prediction, it simulates `gcd.c` with $3903\text{ns}$ using iVerilog.
 
 ##### High frequency on FPGA
 
-- Achieved $210 \text{MHz}$ (without predictor), $200\text{MHz}$ (with predictor).
+- Achieved $210 \text{MHz}$.
 
-  - Passed all tests with very little probability failed, reprogramming FPGA will solve the problem.
+  - Note that running with frequency over $\sim120 \text{MHz}$ will lead to UART buffer overflow in case `bulgarian.c` and `qsort.c`, longer sleep in source would help.
 
-  - Note that running with frequency over $\sim150 \text{MHz}$ will lead to UART buffer overflow in case `bulgarian.c` and `qsort.c`, longer sleep in source would help.
-
-  - Failed on stress test, while $190 \text{MHz} $ passed stress test using $133s$ (code in *attached sheet*):
+  - Failed on stress test, while $200 \text{MHz} $ passed stress test using $127s$ (code in *attached sheet*):
 
     ![fff](fff.png)
 
-- Best timing of `pi.c` is around $0.56s$, using $200 \text{MHz}$ one:
+- Best timing of `pi.c` is around $0.54s$, using $210 \text{MHz}$ one:
 
   ![ddd](ddd.png)
 
@@ -57,7 +55,7 @@ It is a CPU that aiming at the best speed on FPGA.
 
 - I had handled the delays with care, including:
 
-  - Branches calculated at EX stage, except `JAL`  jumped at ID stage.
+  - Branches calculated at EX stage.
   - Use sequential circuits instead of combinational circuits when handling cache in order to decrease bottleneck timing slack by $5ns+$.
   - Carefully designed memory controller in order to achieve a fairly good speed.
 
@@ -76,8 +74,6 @@ Jump at EX stage, except `JAL` jump at ID stage.
 Data forwarding : $\text{EX} \rightarrow \text{ID}, \text{MEM}\rightarrow\text{ID}$
 
 The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$ is that $\text{EX}$ stage is slow, comparing with $\text{ID}, \text{EX}$ is a worse choice.
-
-
 
 ### Problems met when working on it
 
@@ -157,7 +153,7 @@ The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$
 
    - At the posedge of cycle $0$, MCTL send a request in order to access RAM or I/O.
 
-   - At the posedge of cycle $1$, TOP process the request and access RAM or I/O(HCI) by the higher $2$ bits.
+   - At the posedge of cycle $1$, TOP access RAM or I/O(HCI) by the higher $2$ bits of address.
 
    - At the posedge of cycle $2$, TOP return the data by the type **REQUESTED IN CYCLE** $1$(**should be cycle** $0$).
 
@@ -166,6 +162,20 @@ The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$
    - I didn't change the `hci.v` in my file since it's not for debugging purpose, and there's comment:
 
      `modification allowed for debugging purposes`
+   
+8. `pi.c` **WRONG ANSWER**.
+
+   ```cpp
+   31415926535897932384626433832795288...
+   ```
+
+   should be
+
+   ```cpp
+   314159265358979323846264338327950288...
+   ```
+
+   because the origin program uses `%04d` but `pi.c` uses `outl`. 
 
 ### Acknowledgement
 

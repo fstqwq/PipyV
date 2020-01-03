@@ -9,8 +9,8 @@ module pc_reg (
     input wire                  ex_b_flag_i,
     input wire[`InstAddrBus]    ex_b_target_i,
 
-    input wire                  id_b_flag_i,
-    input wire[`InstAddrBus]    id_b_target_i,
+//    input wire                  id_b_flag_i,
+//    input wire[`InstAddrBus]    id_b_target_i,
 
     input wire                  je,
     input wire[`InstAddrBus]    jdest,
@@ -28,9 +28,9 @@ always @ (posedge clk) begin
     end else if(ex_b_flag_i == `True) begin
         pc  <= ex_b_target_i;
         jmp <= `False;
-    end else if(id_b_flag_i == `True) begin
+/*    end else if(id_b_flag_i == `True) begin
         pc  <= id_b_target_i;
-        jmp <= `False;
+        jmp <= `False;*/
     end else if (stall_state[0] == `True) begin
 
     end else if (je == `True) begin

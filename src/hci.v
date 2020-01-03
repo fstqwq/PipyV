@@ -29,7 +29,7 @@
 
 module hci
 #(
-  parameter SYS_CLK_FREQ = 190000000,
+  parameter SYS_CLK_FREQ = 100000000,
   parameter RAM_ADDR_WIDTH = 17,
   parameter BAUD_RATE = 115200
 )
@@ -137,7 +137,7 @@ assign cpu_dbgreg_seg[0] = cpu_dbgreg_din[7:0];
 // CPU Cycle Counter
 reg  [31:0] q_cpu_cycle_cnt;
 wire [31:0] d_cpu_cycle_cnt;
-assign d_cpu_cycle_cnt = active ? q_cpu_cycle_cnt : q_cpu_cycle_cnt + 1'b1;
+assign d_cpu_cycle_cnt = /*active ? q_cpu_cycle_cnt : */q_cpu_cycle_cnt + 1'b1;
 
 // Update FF state.
 always @(posedge clk)
@@ -248,6 +248,7 @@ always @*
               d_wr_en = 1'b1;
             end
             $display("IO:Return");
+            $display("CLOCK %t", $realtime);
             $finish;
           end
         endcase

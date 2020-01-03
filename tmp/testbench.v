@@ -21,7 +21,7 @@ initial begin
   repeat(50) #1 clk=!clk;
   rst=0; 
   repeat(1000000) #1 clk=!clk;
-//  forever #1 clk=!clk;
+  forever #1 clk=!clk;
   $finish;
 end
 

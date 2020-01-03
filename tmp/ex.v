@@ -47,8 +47,10 @@ always @ (*) begin // Branch and Jump
     if (rst != `RstEnable) begin
         case (aluop_i)
             `EX_JAL: begin
-//                b_target_o  = pc_i + offset_i;
-//                b_flag_o    = `True;
+                is_jmp = `True;
+                b_target_o  = pc_i + offset_i;
+                b_flag_o    = !jmp_i;
+                jmp_res     = `True;
             end
             `EX_JALR: begin
                 b_target_o  = {tmp[31:1], 1'b0};

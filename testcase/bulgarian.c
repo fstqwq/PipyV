@@ -134,7 +134,7 @@ int main() {
 			fun /= 2;
 		}*/
 //		outl(clock());
-        sleep(10); // to prevent UART buffer from overflowing
+/        sleep(10); // to prevent UART buffer from overflowing
     }
     print("Total: ");
     outl(count);

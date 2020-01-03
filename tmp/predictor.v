@@ -22,10 +22,8 @@ always @ (posedge clk) begin
     if (rst) begin
         for (i = 0; i < `PIndexSize; i = i + 1) begin
             tag[i][`PValidBit] <= `InstInvalid; 
-            tab[i] <= 2'b01;
+            tab[i] <= 2'b10;
         end
-        je      <= `False;
-        jdest   <= `ZeroWord;
     end else if (is_jmp && jmp_res) begin
         tag[pc_ex[`PIndexBus]] <= pc_ex[`PTagBits];
         des[pc_ex[`PIndexBus]] <= dest;

@@ -7,7 +7,7 @@ module if_id(
     input wire[`InstAddrBus]    if_pc,
     input wire[`InstBus]        if_inst,
 
-    input wire                  id_b_flag_i,
+ //   input wire                  id_b_flag_i,
     input wire                  ex_b_flag_i,
 
     input wire[`StallBus]       stall_state,
@@ -32,7 +32,7 @@ always @ (posedge clk) begin
         id_pc   <= `ZeroWord;
     end else if (stall_state[2] == `True) begin
 
-    end else if (ex_b_flag_i | id_b_flag_i) begin
+    end else if (ex_b_flag_i/* | id_b_flag_i*/) begin
         id_inst <= `ZeroWord;
         id_pc   <= `ZeroWord;
     end else if (stall_state[1] == `False) begin

@@ -109,8 +109,8 @@ wire[`RegBus]   ram_addr;
 
 wire                ex_b_flag;
 wire[`InstAddrBus]  ex_b_target;
-wire                id_b_flag;
-wire[`InstAddrBus]  id_b_target;
+//wire                id_b_flag;
+//wire[`InstAddrBus]  id_b_target;
 wire                ex_ld_flag;
 
 wire[`InstAddrBus]  id_offset;
@@ -149,7 +149,7 @@ predictor predictor0 (
 pc_reg pc_reg0 (
   .clk(clk_in), .rst(rst), .pc(pc), 
   .je(je), .jdest(jdest), .jmp(id_jmp),
-  .id_b_flag_i(id_b_flag), .id_b_target_i(id_b_target),
+//  .id_b_flag_i(id_b_flag), .id_b_target_i(id_b_target),
   .ex_b_flag_i(ex_b_flag), .ex_b_target_i(ex_b_target),
   .stall_state(stall_state)
 );
@@ -168,7 +168,7 @@ if_id if_id0 (
   .id_pc(id_pc_i),  .id_inst(id_inst_i),
 
   .ex_b_flag_i(ex_b_flag),
-  .id_b_flag_i(id_b_flag),
+//  .id_b_flag_i(id_b_flag),
 
   .stall_state(stall_state)
 );
@@ -199,7 +199,7 @@ id id0(
     
     .wd_o(id_wd_o),           .wreg_o(id_wreg_o),
     .offset_o(id_offset),
-    .b_flag_o(id_b_flag),     .b_target_o(id_b_target),
+//    .b_flag_o(id_b_flag),     .b_target_o(id_b_target),
 
     .id_stall(id_stall)
 );

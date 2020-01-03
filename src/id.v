@@ -33,8 +33,6 @@ module id (
     output reg[`RegAddrBus]     wd_o,
     output reg                  wreg_o,
 
-    output reg                  b_flag_o,
-    output reg[`InstAddrBus]    b_target_o,
     output reg[`RegBus]         offset_o,
 
     output wire                 id_stall
@@ -67,8 +65,8 @@ always @ (*) begin
     reg1_addr_o = rs1;
     reg2_addr_o = rs2;  
     pc_o        = pc_i;
-    b_flag_o    = `False;
-    b_target_o  = 0;
+//    b_flag_o    = `False;
+//    b_target_o  = 0;
     jmp_o       = jmp_i;
     if (rst != `RstEnable) begin
         case (opcode)
@@ -386,8 +384,8 @@ always @ (*) begin
                 reg1_read_o = `False;
                 reg2_read_o = `False;
                 imm =         {{11{UJ_imm[19]}},UJ_imm,1'h0};
-                b_flag_o =    `True;
-                b_target_o =  pc_i + {{11{UJ_imm[19]}},UJ_imm,1'h0};
+//                b_flag_o =    `True;
+//                b_target_o =  pc_i + {{11{UJ_imm[19]}},UJ_imm,1'h0};
             end
             `JALR: begin
                 aluop_o =     `EX_JALR;

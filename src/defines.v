@@ -142,11 +142,11 @@
 `define SCacheIndex     6:0
 `define SCacheSize      128
 
-`define PIndexBus       9:2
-`define PIndexSize      256
-`define PTagBus         7:0
-`define PTagBits        17:10
-`define PValidBit       7
+`define PIndexBus       8:2
+`define PIndexSize      128
+`define PTagBus         8:0
+`define PTagBits        17:9
+`define PValidBit       8
 
 `define INSR            2'b01
 `define RAMO            2'b10
