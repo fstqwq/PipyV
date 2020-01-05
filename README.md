@@ -67,7 +67,7 @@ It is a CPU that aiming at the best speed on FPGA.
 
 ##### Branch
 
-Jump at EX stage, except `JAL` jump at ID stage. 
+Jump at EX stage, except `JAL` (in older version) jump at ID stage. 
 
 ##### Hazard
 
