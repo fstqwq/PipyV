@@ -43,7 +43,7 @@ It is a CPU that aiming at the best speed on FPGA.
 
     ![fff](fff.png)
 
-- Best timing of `pi.c` is around $0.54s$, using $210 \text{MHz}$ one:
+- Best timing of `pi.c` is around $0.54s$, using $210 \text{MHz}$ one(The picture is missing and I use $0.56s$ one):
 
   ![ddd](ddd.png)
 
