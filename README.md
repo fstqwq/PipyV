@@ -75,6 +75,18 @@ Data forwarding : $\text{EX} \rightarrow \text{ID}, \text{MEM}\rightarrow\text{I
 
 The reason why I don't use a $*\rightarrow\text{EX}$ but $*\rightarrow\text{ID}$ is that $\text{EX}$ stage is slow, comparing with $\text{ID}, \text{EX}$ is a worse choice.
 
+Stall: Using stall controller and $\text{EX}$ load flag for $\text{ID}$.
+
+##### Improvement but not implemented
+
+1. Assign is slow.
+
+   I use assign for different kinds of operands which according to 庄永昊's presentation, is slow.
+
+2. Smarter ID.
+
+   After reading 金乐盛's extra high frequency CPU, I realized that the second level decode of ID is somehow useless because there are always cases in EX. So there can be less calculation in ID.
+
 ### Problems met when working on it
 
 1. Implemented BGE with $>$.
